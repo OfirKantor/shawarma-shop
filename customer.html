@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shawarma Order</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Customize Your Shawarma</h2>
+        <form id="orderForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" name="options" value="Salad"> Salad
+                </label>
+                <label>
+                    <input type="checkbox" name="options" value="Ketchup"> Ketchup
+                </label>
+                <label>
+                    <input type="checkbox" name="options" value="Meat"> Meat
+                </label>
+            </div>
+
+            <button type="button" onclick="submitOrder()">Send Order</button>
+        </form>
+    </div>
+
+    <script>
+        function submitOrder() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const options = Array.from(document.querySelectorAll('input[name="options"]:checked'))
+                .map(option => option.value);
+
+            const order = { name, phone, options };
+
+            // Send data to the shop owner page
+            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
+
+            alert('Your order has been sent!');
+            document.getElementById('orderForm').reset();
+        }
+    </script>
+</body>
+</html>
