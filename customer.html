@@ -66,35 +66,23 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
-  authDomain: "test-655b0.firebaseapp.com",
-  databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
-  projectId: "test-655b0",
-  storageBucket: "test-655b0.firebasestorage.app",
-  messagingSenderId: "948260428804",
-  appId: "1:948260428804:web:78f1ea2db14800c5b42951"
-};
+ <script>
+        function submitOrder() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const options = Array.from(document.querySelectorAll('input[name="options"]:checked'))
+                .map(option => option.value);
 
- // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+            const order = { name, phone, options };
 
-    function submitOrder() {
-        const name = document.getElementById('name').value;
-        const phone = document.getElementById('phone').value;
-        const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+            // Send data to the shop owner page
+            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
 
-        const order = { name, phone, options };
-
-        // Save order to Firebase
-        //const ordersRef = firebase.database().ref('orders');
-        //ordersRef.push(order);
-
-        alert('Your order has been sent!');
-        document.getElementById('orderForm').reset();
-    }
-</script>
+            alert('Your order has been sent!');
+            document.getElementById('orderForm').reset();
+        }
+    </script>
 </body>
 </html>
