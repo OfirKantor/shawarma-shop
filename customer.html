@@ -63,7 +63,7 @@
         </form>
     </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js"></script>
 
 <script>
@@ -84,8 +84,7 @@ const firebaseConfig = {
     function submitOrder() {
         const name = document.getElementById('name').value;
         const phone = document.getElementById('phone').value;
-        const options = Array.from(document.querySelectorAll('input[name="options"]:checked'))
-            .map(option => option.value);
+        const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
 
         const order = { name, phone, options };
 
