@@ -89,8 +89,8 @@ const firebaseConfig = {
         const order = { name, phone, options };
 
         // Save order to Firebase
-        const ordersRef = firebase.database().ref('orders');
-        ordersRef.push(order);
+        //const ordersRef = firebase.database().ref('orders');
+        //ordersRef.push(order);
 
         alert('Your order has been sent!');
         document.getElementById('orderForm').reset();
