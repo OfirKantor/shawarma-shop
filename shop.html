@@ -1,4 +1,4 @@
-<!DOCTYPE html>   
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -31,67 +31,118 @@
 <body>
     <div class="container">
         <h2>Customer Orders</h2>
-        <table>
+        <table id="ordersTable">
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Phone</th>
                     <th>Options</th>
+                    <th>TakeOut</th>
                 </tr>
             </thead>
-            <tbody id="ordersTable">
+            <tbody >
                 <!-- Orders will be displayed here -->
             </tbody>
         </table>
+
+        <button id="clearDbBtn" type="button">Clear orders</button>
+
     </div>
 
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-  import { getDatabase } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
+          authDomain: "test-655b0.firebaseapp.com",
+          databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
+          projectId: "test-655b0",
+          storageBucket: "test-655b0.firebasestorage.app",
+          messagingSenderId: "948260428804",
+          appId: "1:948260428804:web:78f1ea2db14800c5b42951"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
-    authDomain: "test-655b0.firebaseapp.com",
-    databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
-    projectId: "test-655b0",
-    storageBucket: "test-655b0.firebasestorage.app",
-    messagingSenderId: "948260428804",
-    appId: "1:948260428804:web:78f1ea2db14800c5b42951"
-  };
+        import {getDatabase,get,ref,set} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase();
-</script>
-    
-<script>
-    function loadOrders() {
-        const ordersRef = database().ref('orders');
-        ordersRef.on('value', (snapshot) => {
-            const orders = snapshot.val();
+        const db = getDatabase();
+
+        var sendOrder = document.querySelector("#clearDbBtn")
+        sendOrder.addEventListener('click', ClearOrders);
+
+        function ClearOrders(){
+            const dbRef = ref(db, "/");     
+            set(dbRef, null)
+            .then(() => {
+                alert("Database cleared successfully.");
+            })
+            .catch((error) => {
+                alert("Error clearing the database:", error);
+            });
+            loadOrders();
+        }
+
+        function loadOrders() {
+           // ordersTable.innerHTML = "";
             const ordersTable = document.getElementById('ordersTable');
+            const ordersRef = ref(db, 'Orders'); // Path to the Orders node in the database
 
-            ordersTable.innerHTML = '';
-            for (let id in orders) {
-                const order = orders[id];
-                ordersTable.innerHTML += `
-                    <tr>
-                        <td>${order.name}</td>
-                        <td>${order.phone}</td>
-                        <td>${order.options.join(', ')}</td>
-                    </tr>
-                `;
-            }
-        });
-    }
+            get(ordersRef)
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        // Clear existing rows in the table
+                        ordersTable.innerHTML = '';
 
-    // Load orders on page load
-    document.addEventListener('DOMContentLoaded', loadOrders);
-</script>
+                        // Get order data
+                        const data = snapshot.val();
 
+                        // Populate the table
+                        Object.values(data).forEach((order) => {
+                            const row = document.createElement('tr');
+                            
+                            // Name cell
+                            const nameCell = document.createElement('td');
+                            nameCell.textContent = order.name;
+                            row.appendChild(nameCell);
+
+                            // Phone cell
+                            const phoneCell = document.createElement('td');
+                            phoneCell.textContent = order.phone;
+                            row.appendChild(phoneCell);
+
+                            // Options cell
+                            const optionsCell = document.createElement('td');
+                            optionsCell.textContent = order.options.join(', ');
+                            row.appendChild(optionsCell);
+
+                            // Options cell
+                            const takeOut = document.createElement('td');
+                            takeOut.textContent = order.takeOut;
+                            row.appendChild(takeOut);
+
+                            // Append row to table
+                            ordersTable.appendChild(row);
+                        });
+                    } else {
+                        // No data available
+                        ordersTable.innerHTML = '<tr><td colspan="3">No orders available</td></tr>';
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading orders:', error);
+                    ordersTable.innerHTML = '<tr><td colspan="3">Error loading orders</td></tr>';
+                });
+        }
+        // Load orders on page load
+        document.addEventListener('DOMContentLoaded', loadOrders); 
+        setInterval(loadOrders, 2000);
+       
+    </script>
 </body>
 </html>
