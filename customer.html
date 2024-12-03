@@ -1,4 +1,4 @@
-<!DOCTYPE html>    
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,113 +6,254 @@
     <title>Shawarma Order</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
         }
+
         .container {
             max-width: 500px;
-            margin: auto;
+            margin: 50px auto;
             padding: 20px;
-            border: 1px solid #ddd;
+            background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
+
+        h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #444;
+            text-align: center;
+        }
+
         label {
             display: block;
             margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
         }
+
+        input[type="text"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
         .checkbox-group {
             margin-bottom: 15px;
         }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .total-price {
+            text-align: right;
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
         button {
-            background-color: #28a745;
-            color: white;
-            padding: 10px 15px;
+            display: block;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
+
         button:hover {
-            background-color: #218838;
+            background-color: #0056b3;
+        }
+
+        #closed-page {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        #closed-page h2 {
+            font-size: 28px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        #closed-page p {
+            font-size: 16px;
+            color: #777;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            button {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="order-page" class="container" style="display: none;">
         <h2>Customize Your Shawarma</h2>
         <form id="orderForm">
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
+            <input type="text" id="name" name="name" required placeholder="Enter your name">
             
             <label for="phone">Phone Number:</label>
-            <input type="tel" id="phone" name="phone" required>
+            <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
 
             <div class="checkbox-group">
                 <label>
-                    <input type="checkbox" name="options" value="Salad"> Salad
+                    <input type="checkbox" name="options" value="Salad" data-price="10"> Salad (10)
                 </label>
                 <label>
-                    <input type="checkbox" name="options" value="Ketchup"> Ketchup
+                    <input type="checkbox" name="options" value="Ketchup" data-price="5"> Ketchup (5)
                 </label>
                 <label>
-                    <input type="checkbox" name="options" value="Meat"> Meat
+                    <input type="checkbox" name="options" value="Meat" data-price="20"> Meat (20)
                 </label>
             </div>
 
             <label>
-                <input type="checkbox" id="TakeOut" value="Take out"> Take out
+                <input type="checkbox" id="TakeOut" value="Take out" data-price="10"> Take out (10)
             </label>
+
+            <p class="total-price">Total Price: <span id="totalPrice">0</span></p>
 
             <button id="sendBtnId" type="button">Send Order</button>
         </form>
     </div>
 
+    <div id="closed-page" style="display: none;">
+        <h2>Our Shop is Closed</h2>
+        <p>We open at 10 AM!</p>
+    </div>
+
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-      
-        // Your web app's Firebase configuration
+        import { getDatabase, push, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
         const firebaseConfig = {
-          apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
-          authDomain: "test-655b0.firebaseapp.com",
-          databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
-          projectId: "test-655b0",
-          storageBucket: "test-655b0.firebasestorage.app",
-          messagingSenderId: "948260428804",
-          appId: "1:948260428804:web:78f1ea2db14800c5b42951"
+            apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
+            authDomain: "test-655b0.firebaseapp.com",
+            databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
+            projectId: "test-655b0",
+            storageBucket: "test-655b0.firebasestorage.app",
+            messagingSenderId: "948260428804",
+            appId: "1:948260428804:web:78f1ea2db14800c5b42951"
         };
-      
-        // Initialize Firebase
+
         const app = initializeApp(firebaseConfig);
-
-        import {getDatabase,push,ref} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
         const db = getDatabase();
 
-        var sendOrder = document.querySelector("#sendBtnId")
-        sendOrder.addEventListener('click', submitOrder);
-        function submitOrder() {
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const options = Array.from(document.querySelectorAll('input[name="options"]:checked'))
-                .map(option => option.value);
+        document.addEventListener('DOMContentLoaded', () => {
+            const sendOrder = document.querySelector("#sendBtnId");
+            sendOrder.addEventListener('click', submitOrder);
 
-            var takeOut = "";
-            if(document.getElementById("TakeOut").checked){
-                takeOut = "V"
+            const checkboxes = document.querySelectorAll('input[name="options"], #TakeOut');
+            checkboxes.forEach(checkbox => checkbox.addEventListener('change', updateTotalPrice));
+
+            function updateTotalPrice() {
+                const selectedOptions = Array.from(document.querySelectorAll('input[name="options"]:checked, #TakeOut:checked'));
+                const totalPrice = selectedOptions.reduce((total, option) => {
+                    return total + parseInt(option.dataset.price, 10);
+                }, 0);
+
+                document.getElementById('totalPrice').textContent = totalPrice;
             }
-            const order = { name, phone, options, takeOut };
 
-            // Push order to Firebase
-            push(ref(db, "Orders"), order);
+            function submitOrder() {
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                const options = Array.from(document.querySelectorAll('input[name="options"]:checked'))
+                    .map(option => option.value);
+                    
+                if (name.length === 0) {
+                alert("Please enter your name.");
+                return;
+                }
+                if (phone.length === 0) {
+                    alert("Please enter your phone number.");
+                    return;
+                }
+                if (options.length === 0) {
+                    alert("Please select at least one option before submitting your order.");
+                    return;
+                }
+                
+               
 
-            //alert('Your order has been submitted!');
-            document.getElementById('orderForm').reset();
+                const takeOutCheckbox = document.getElementById("TakeOut");
+                const takeOut = takeOutCheckbox.checked ? "V" : "";
+
+                const totalPrice = parseInt(document.getElementById('totalPrice').textContent, 10);
+
+                const order = { name, phone, options, takeOut, totalPrice };
+
+                push(ref(db, "Orders"), order);
+
+                alert('Your order has been submitted!');
+                document.getElementById('orderForm').reset();
+                document.getElementById('totalPrice').textContent = "0";
+            }
+
+            loadOrdersPage();
+        });
+
+        function loadOrdersPage() {
+            const configRef = ref(db, 'config/');
+            get(configRef)
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const config = snapshot.val();
+                        if (config.is_shop_open) {
+                            document.getElementById('order-page').style.display = 'block';
+                            document.getElementById('closed-page').style.display = 'none';
+                        } else {
+                            document.getElementById('order-page').style.display = 'none';
+                            document.getElementById('closed-page').style.display = 'block';
+                        }
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading shop status:', error);
+                });
         }
-
-      </script>
-
+    </script>
 </body>
 </html>
