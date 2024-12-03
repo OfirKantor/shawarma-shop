@@ -82,7 +82,7 @@
     </style>
 </head>
 <body>
-    <div id="order-page" class="container">
+    <div id="order-page" class="container" style="display: none;">
         <h2>Customize Your Shawarma</h2>
         <form id="orderForm">
             <label for="name">Name:</label>
@@ -144,6 +144,27 @@
 
         let orders = [];
         let customerInfo = null; // Store customer name and phone
+
+        // Load the order page, check if the shop is open or closed
+        function loadOrdersPage() {
+            const configRef = ref(db, "config/");
+            get(configRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const config = snapshot.val();
+                    const isShopOpen = config.is_shop_open;
+
+                    if (isShopOpen) {
+                        document.getElementById("order-page").style.display = "block";
+                        document.getElementById("closed-page").style.display = "none";
+                    } else {
+                        document.getElementById("order-page").style.display = "none";
+                        document.getElementById("closed-page").style.display = "block";
+                    }
+                }
+            }).catch((error) => {
+                console.error("Error loading shop status:", error);
+            });
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const addOrderBtn = document.querySelector("#addOrderBtn");
@@ -219,32 +240,39 @@
                     orderReviewList.appendChild(orderDiv);
 
                     // Remove button functionality
-                    orderDiv.querySelector("button").addEventListener('click', function () {
-                        orders.splice(index, 1); // Remove the order from the list
-                        updateOrderReview(); // Re-render the order review section
+                    orderDiv.querySelector('button').addEventListener('click', function() {
+                        removeOrder(index);
                     });
 
                     overallPrice += order.totalPrice;
                 });
 
-                document.getElementById("overallPrice").textContent = overallPrice; // Update the overall price
+                document.getElementById('overallPrice').textContent = overallPrice;
+            }
+
+            function removeOrder(index) {
+                orders.splice(index, 1);
+                updateOrderReview();
             }
 
             function sendOrders() {
                 if (orders.length === 0) {
-                    alert("Please add at least one order.");
+                    alert("You have no orders to send.");
                     return;
                 }
 
-                // Push all orders to Firebase
                 orders.forEach(order => {
-                    push(ref(db, "Orders"), order);
+                    push(ref(db, "Orders/"), order).catch((error) => {
+                        console.error("Error sending order:", error);
+                    });
                 });
 
-                alert('Your orders have been submitted!');
-                orders = []; // Clear the orders
-                updateOrderReview(); // Clear the review section
+                alert("Orders sent successfully!");
+                orders = []; // Reset orders after sending
+                updateOrderReview(); // Clear review section
             }
+
+            loadOrdersPage();
         });
     </script>
 </body>
