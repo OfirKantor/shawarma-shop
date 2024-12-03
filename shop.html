@@ -6,25 +6,94 @@
     <title>Shawarma Orders</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
         }
+
         .container {
-            max-width: 600px;
-            margin: auto;
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
+        h2 {
+            margin-top: 0;
+            font-size: 28px;
+            color: #444;
+            text-align: center;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin: 20px 0;
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
             text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
         }
+
         th {
-            background-color: #f4f4f4;
+            background-color: #007bff;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        tr.marked {
+            background-color: #d4edda !important;
+        }
+
+        td {
+            font-size: 14px;
+            color: #555;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:last-child {
+            margin-right: 0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            button {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
@@ -38,112 +107,117 @@
                     <th>Phone</th>
                     <th>Options</th>
                     <th>TakeOut</th>
+                    <th>Price</th>
                 </tr>
             </thead>
-            <tbody >
+            <tbody>
                 <!-- Orders will be displayed here -->
             </tbody>
         </table>
 
-        <button id="clearDbBtn" type="button">Clear orders</button>
-
+        <div style="text-align: center;">
+            <button id="clearDbBtn" type="button">Clear Marked Orders</button>
+            <button id="shopStatusBtn" type="button">Toggle Shop Status</button>
+        </div>
     </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-      
-        // Your web app's Firebase configuration
+        import { getDatabase, get, ref, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
         const firebaseConfig = {
-          apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
-          authDomain: "test-655b0.firebaseapp.com",
-          databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
-          projectId: "test-655b0",
-          storageBucket: "test-655b0.firebasestorage.app",
-          messagingSenderId: "948260428804",
-          appId: "1:948260428804:web:78f1ea2db14800c5b42951"
+            apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
+            authDomain: "test-655b0.firebaseapp.com",
+            databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
+            projectId: "test-655b0",
+            storageBucket: "test-655b0.firebasestorage.app",
+            messagingSenderId: "948260428804",
+            appId: "1:948260428804:web:78f1ea2db14800c5b42951"
         };
-      
-        // Initialize Firebase
+
         const app = initializeApp(firebaseConfig);
-
-        import {getDatabase,get,ref,set} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-
         const db = getDatabase();
+        const markedRows = new Set();
 
-        var sendOrder = document.querySelector("#clearDbBtn")
-        sendOrder.addEventListener('click', ClearOrders);
+        document.querySelector("#clearDbBtn").addEventListener("click", clearOrders);
+        document.querySelector("#shopStatusBtn").addEventListener("click", toggleShopStatus);
 
-        function ClearOrders(){
-            const dbRef = ref(db, "/");     
-            set(dbRef, null)
-            .then(() => {
-                alert("Database cleared successfully.");
-            })
-            .catch((error) => {
-                alert("Error clearing the database:", error);
-            });
-            loadOrders();
+        function clearOrders() {
+            const userResponse = confirm("This action will delete all marked rows. Do you want to continue?");
+            if (userResponse) {
+                const deletePromises = Array.from(markedRows).map(id => set(ref(db, `Orders/${id}`), null));
+                Promise.all(deletePromises)
+                    .then(() => {
+                        alert("Marked orders deleted successfully.");
+                        markedRows.clear();
+                        loadOrders();
+                    })
+                    .catch(error => {
+                        console.error("Error deleting marked orders:", error);
+                        alert("An error occurred while deleting marked orders.");
+                    });
+            }
+        }
+
+        function toggleShopStatus() {
+            const configRef = ref(db, "config/");
+            get(configRef)
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const config = snapshot.val();
+                        set(ref(db, "config/is_shop_open"), !config.is_shop_open);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error toggling shop status:", error);
+                });
         }
 
         function loadOrders() {
-           // ordersTable.innerHTML = "";
-            const ordersTable = document.getElementById('ordersTable');
-            const ordersRef = ref(db, 'Orders'); // Path to the Orders node in the database
-
+            const ordersTable = document.querySelector("#ordersTable tbody");
+            const ordersRef = ref(db, "Orders/");
             get(ordersRef)
-                .then((snapshot) => {
+                .then(snapshot => {
                     if (snapshot.exists()) {
-                        // Clear existing rows in the table
-                        ordersTable.innerHTML = '';
-
-                        // Get order data
+                        ordersTable.innerHTML = "";
                         const data = snapshot.val();
+                        Object.entries(data).forEach(([id, order]) => {
+                            const row = document.createElement("tr");
+                            row.dataset.id = id;
 
-                        // Populate the table
-                        Object.values(data).forEach((order) => {
-                            const row = document.createElement('tr');
-                            
-                            // Name cell
-                            const nameCell = document.createElement('td');
-                            nameCell.textContent = order.name;
-                            row.appendChild(nameCell);
+                            row.addEventListener("click", function () {
+                                if (markedRows.has(id)) {
+                                    markedRows.delete(id);
+                                    row.classList.remove("marked");
+                                } else {
+                                    markedRows.add(id);
+                                    row.classList.add("marked");
+                                }
+                            });
 
-                            // Phone cell
-                            const phoneCell = document.createElement('td');
-                            phoneCell.textContent = order.phone;
-                            row.appendChild(phoneCell);
+                            if (markedRows.has(id)) row.classList.add("marked");
 
-                            // Options cell
-                            const optionsCell = document.createElement('td');
-                            optionsCell.textContent = order.options.join(', ');
-                            row.appendChild(optionsCell);
-
-                            // Options cell
-                            const takeOut = document.createElement('td');
-                            takeOut.textContent = order.takeOut;
-                            row.appendChild(takeOut);
-
-                            // Append row to table
+                            row.innerHTML = `
+                                <td>${order.name}</td>
+                                <td>${order.phone}</td>
+                                <td>${order.options.join(", ")}</td>
+                                <td>${order.takeOut}</td>
+                                <td>${order.totalPrice || "N/A"}</td>
+                            `;
                             ordersTable.appendChild(row);
                         });
                     } else {
-                        // No data available
-                        ordersTable.innerHTML = '<tr><td colspan="3">No orders available</td></tr>';
+                        ordersTable.innerHTML = '<tr><td colspan="5">No orders available</td></tr>';
                     }
                 })
-                .catch((error) => {
-                    console.error('Error loading orders:', error);
-                    ordersTable.innerHTML = '<tr><td colspan="3">Error loading orders</td></tr>';
+                .catch(error => {
+                    console.error("Error loading orders:", error);
+                    ordersTable.innerHTML = '<tr><td colspan="5">Error loading orders</td></tr>';
                 });
         }
-        // Load orders on page load
-        document.addEventListener('DOMContentLoaded', loadOrders); 
-        // query DB every 2 seconds
+
+        document.addEventListener("DOMContentLoaded", loadOrders);
         setInterval(loadOrders, 2000);
-       
     </script>
 </body>
 </html>
