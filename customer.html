@@ -70,6 +70,8 @@
             color: white;
             border-radius: 5px;
             cursor: pointer;
+            width: 100px; /* Fixed width */
+            text-align: center;
         }
         .order-item button:hover {
             background-color: darkred;
@@ -113,6 +115,7 @@
         <div id="orderReviewSection" class="order-review" style="display: none;">
             <h3>Your Orders</h3>
             <div id="orderReviewList"></div>
+            <p><strong>Overall Price:</strong> $<span id="overallPrice">0</span></p>
             <button id="sendOrderBtn" type="button">Send Orders</button>
         </div>
     </div>
@@ -203,6 +206,7 @@
             function updateOrderReview() {
                 const orderReviewList = document.getElementById("orderReviewList");
                 orderReviewList.innerHTML = '';
+                let overallPrice = 0;
 
                 orders.forEach((order, index) => {
                     const orderDiv = document.createElement('div');
@@ -219,7 +223,11 @@
                         orders.splice(index, 1); // Remove the order from the list
                         updateOrderReview(); // Re-render the order review section
                     });
+
+                    overallPrice += order.totalPrice;
                 });
+
+                document.getElementById("overallPrice").textContent = overallPrice; // Update the overall price
             }
 
             function sendOrders() {
@@ -235,9 +243,7 @@
 
                 alert('Your orders have been submitted!');
                 orders = []; // Clear the orders
-                document.getElementById("orderReviewSection").style.display = 'none'; // Hide review section
-                document.getElementById('orderForm').reset();
-                document.getElementById('totalPrice').textContent = "0"; // Reset total price
+                updateOrderReview(); // Clear the review section
             }
         });
     </script>
