@@ -7,135 +7,87 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
+            margin: 20px;
         }
-
         .container {
             max-width: 500px;
-            margin: 50px auto;
+            margin: auto;
             padding: 20px;
-            background-color: #fff;
+            border: 1px solid #ddd;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        h2 {
-            margin: 0 0 20px;
-            font-size: 24px;
-            color: #444;
-            text-align: center;
-        }
-
         label {
             display: block;
             margin-bottom: 8px;
-            font-size: 14px;
-            color: #555;
         }
-
-        input[type="text"],
-        input[type="tel"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        input[type="text"]:focus,
-        input[type="tel"]:focus {
-            border-color: #007bff;
-            outline: none;
-        }
-
         .checkbox-group {
             margin-bottom: 15px;
         }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            cursor: pointer;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
-        .total-price {
-            text-align: right;
-            font-size: 18px;
-            margin-top: 15px;
-            font-weight: bold;
-            color: #007bff;
-        }
-
         button {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
         }
-
         button:hover {
-            background-color: #0056b3;
+            background-color: #218838;
         }
-
+        p {
+            font-size: 18px;
+            margin-top: 10px;
+        }
         #closed-page {
             text-align: center;
-            padding: 50px 20px;
         }
-
-        #closed-page h2 {
-            font-size: 28px;
-            color: #555;
-            margin-bottom: 10px;
+        .order-review {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
         }
-
-        #closed-page p {
+        .order-review h3 {
+            margin-top: 0;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .order-item span {
             font-size: 16px;
-            color: #777;
         }
-
-        @media (max-width: 600px) {
-            .container {
-                margin: 20px;
-                padding: 15px;
-            }
-
-            h2 {
-                font-size: 20px;
-            }
-
-            button {
-                font-size: 14px;
-            }
+        .order-item button {
+            background-color: red;
+            padding: 5px 10px;
+            font-size: 14px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .order-item button:hover {
+            background-color: darkred;
+        }
+        input[readonly] {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
-    <div id="order-page" class="container" style="display: none;">
+    <div id="order-page" class="container">
         <h2>Customize Your Shawarma</h2>
         <form id="orderForm">
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required placeholder="Enter your name">
-            
+            <input type="text" id="name" name="name" required>
+
             <label for="phone">Phone Number:</label>
-            <input type="tel" id="phone" name="phone" required placeholder="Enter your phone number">
+            <input type="tel" id="phone" name="phone" required>
 
             <div class="checkbox-group">
                 <label>
@@ -153,10 +105,16 @@
                 <input type="checkbox" id="TakeOut" value="Take out" data-price="10"> Take out (10)
             </label>
 
-            <p class="total-price">Total Price: <span id="totalPrice">0</span></p>
+            <p><strong>Total Price:</strong> <span id="totalPrice">0</span></p>
 
-            <button id="sendBtnId" type="button">Send Order</button>
+            <button id="addOrderBtn" type="button">Add Order</button>
         </form>
+
+        <div id="orderReviewSection" class="order-review" style="display: none;">
+            <h3>Your Orders</h3>
+            <div id="orderReviewList"></div>
+            <button id="sendOrderBtn" type="button">Send Orders</button>
+        </div>
     </div>
 
     <div id="closed-page" style="display: none;">
@@ -181,9 +139,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase();
 
+        let orders = [];
+        let customerInfo = null; // Store customer name and phone
+
         document.addEventListener('DOMContentLoaded', () => {
-            const sendOrder = document.querySelector("#sendBtnId");
-            sendOrder.addEventListener('click', submitOrder);
+            const addOrderBtn = document.querySelector("#addOrderBtn");
+            const sendOrderBtn = document.querySelector("#sendOrderBtn");
+
+            addOrderBtn.addEventListener('click', addOrder);
+            sendOrderBtn.addEventListener('click', sendOrders);
 
             const checkboxes = document.querySelectorAll('input[name="options"], #TakeOut');
             checkboxes.forEach(checkbox => checkbox.addEventListener('change', updateTotalPrice));
@@ -197,63 +161,85 @@
                 document.getElementById('totalPrice').textContent = totalPrice;
             }
 
-            function submitOrder() {
-                const name = document.getElementById('name').value;
-                const phone = document.getElementById('phone').value;
-                const options = Array.from(document.querySelectorAll('input[name="options"]:checked'))
-                    .map(option => option.value);
-                    
-                if (name.length === 0) {
-                alert("Please enter your name.");
-                return;
-                }
-                if (phone.length === 0) {
-                    alert("Please enter your phone number.");
-                    return;
-                }
-                if (options.length === 0) {
-                    alert("Please select at least one option before submitting your order.");
-                    return;
-                }
-                
-               
-
+            function addOrder() {
+                const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
                 const takeOutCheckbox = document.getElementById("TakeOut");
-                const takeOut = takeOutCheckbox.checked ? "V" : "";
-
+                const takeOut = takeOutCheckbox.checked ? "Take out" : "";
                 const totalPrice = parseInt(document.getElementById('totalPrice').textContent, 10);
 
-                const order = { name, phone, options, takeOut, totalPrice };
+                // If this is the first order, capture name and phone
+                if (!customerInfo) {
+                    const name = document.getElementById('name').value;
+                    const phone = document.getElementById('phone').value;
 
-                push(ref(db, "Orders"), order);
+                    if (!name || !phone) {
+                        alert("Please enter your name and phone number.");
+                        return;
+                    }
 
-                alert('Your order has been submitted!');
+                    customerInfo = { name, phone };
+                    document.getElementById('name').value = name;
+                    document.getElementById('phone').value = phone;
+                    document.getElementById('name').setAttribute("readonly", true);
+                    document.getElementById('phone').setAttribute("readonly", true);
+                }
+
+                if (!options.length) {
+                    alert("Please select at least one option.");
+                    return;
+                }
+
+                const order = { ...customerInfo, options, takeOut, totalPrice };
+
+                orders.push(order);
+                updateOrderReview();
+
                 document.getElementById('orderForm').reset();
-                document.getElementById('totalPrice').textContent = "0";
+                document.getElementById('totalPrice').textContent = "0"; // Reset total price
+
+                document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
             }
 
-            loadOrdersPage();
-        });
+            function updateOrderReview() {
+                const orderReviewList = document.getElementById("orderReviewList");
+                orderReviewList.innerHTML = '';
 
-        function loadOrdersPage() {
-            const configRef = ref(db, 'config/');
-            get(configRef)
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const config = snapshot.val();
-                        if (config.is_shop_open) {
-                            document.getElementById('order-page').style.display = 'block';
-                            document.getElementById('closed-page').style.display = 'none';
-                        } else {
-                            document.getElementById('order-page').style.display = 'none';
-                            document.getElementById('closed-page').style.display = 'block';
-                        }
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error loading shop status:', error);
+                orders.forEach((order, index) => {
+                    const orderDiv = document.createElement('div');
+                    orderDiv.classList.add('order-item');
+
+                    orderDiv.innerHTML = `
+                        <span>${order.options.join(', ')} - $${order.totalPrice}</span>
+                        <button data-index="${index}">Remove</button>
+                    `;
+                    orderReviewList.appendChild(orderDiv);
+
+                    // Remove button functionality
+                    orderDiv.querySelector("button").addEventListener('click', function () {
+                        orders.splice(index, 1); // Remove the order from the list
+                        updateOrderReview(); // Re-render the order review section
+                    });
                 });
-        }
+            }
+
+            function sendOrders() {
+                if (orders.length === 0) {
+                    alert("Please add at least one order.");
+                    return;
+                }
+
+                // Push all orders to Firebase
+                orders.forEach(order => {
+                    push(ref(db, "Orders"), order);
+                });
+
+                alert('Your orders have been submitted!');
+                orders = []; // Clear the orders
+                document.getElementById("orderReviewSection").style.display = 'none'; // Hide review section
+                document.getElementById('orderForm').reset();
+                document.getElementById('totalPrice').textContent = "0"; // Reset total price
+            }
+        });
     </script>
 </body>
 </html>
