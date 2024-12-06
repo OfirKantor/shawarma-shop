@@ -81,6 +81,13 @@
             margin-right: 0;
         }
 
+        .floating-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 15px;
@@ -116,10 +123,12 @@
         </table>
 
         <div style="text-align: center;">
-            <button id="clearDbBtn" type="button">Clear Marked Orders</button>
-            <button id="shopStatusBtn" type="button">Toggle Shop Status</button>
+            <button id="clearDbBtn" type="button">Clear Orders</button>
         </div>
     </div>
+
+    <!-- Floating button -->
+    <button id="shopStatusBtn" class="floating-button" type="button">...</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -140,15 +149,26 @@
         const markedRows = new Set();
 
         document.querySelector("#clearDbBtn").addEventListener("click", clearOrders);
-        document.querySelector("#shopStatusBtn").addEventListener("click", toggleShopStatus);
+        document.querySelector("#shopStatusBtn").addEventListener("click", function(){toggleShopStatus(true);});
 
         function clearOrders() {
-            const userResponse = confirm("This action will delete all marked rows. Do you want to continue?");
+            var userResponse = true;
+            var clearAll = false;
+            if(markedRows.size === 0){
+                userResponse = confirm("This action will delete all rows. Do you want to continue?");
+                clearAll = true;
+            }
+            else{
+                userResponse = confirm("This action will delete all marked rows. Do you want to continue?");
+            }
             if (userResponse) {
+                if(clearAll){
+                    set(ref(db, `Orders/`), null)
+                }
+                else{
                 const deletePromises = Array.from(markedRows).map(id => set(ref(db, `Orders/${id}`), null));
                 Promise.all(deletePromises)
                     .then(() => {
-                        alert("Marked orders deleted successfully.");
                         markedRows.clear();
                         loadOrders();
                     })
@@ -156,16 +176,33 @@
                         console.error("Error deleting marked orders:", error);
                         alert("An error occurred while deleting marked orders.");
                     });
+                }
             }
         }
 
-        function toggleShopStatus() {
-            const configRef = ref(db, "config/");
+        const toggleButton = document.getElementById('shopStatusBtn');
+        const configRef = ref(db, "config/");
+
+        
+        function toggleShopStatus(changeStatus = false) {
             get(configRef)
                 .then(snapshot => {
                     if (snapshot.exists()) {
                         const config = snapshot.val();
-                        set(ref(db, "config/is_shop_open"), !config.is_shop_open);
+                        var isShopOpen = config.is_shop_open
+                        if(changeStatus == true){
+                            set(ref(db, "config/is_shop_open"), !config.is_shop_open);
+                            isShopOpen = !config.is_shop_open;
+                        }
+                        if(isShopOpen){
+                            toggleButton.textContent = "Shop is Open";
+                            toggleButton.style.backgroundColor = "green";
+                        }
+                        else{
+                            toggleButton.textContent = "Shop is closed";
+                            toggleButton.style.backgroundColor = "red";
+                        }
+                        
                     }
                 })
                 .catch(error => {
@@ -173,9 +210,11 @@
                 });
         }
 
+        const ordersTable = document.querySelector("#ordersTable tbody");
+        const ordersRef = ref(db, "Orders/");
+
         function loadOrders() {
-            const ordersTable = document.querySelector("#ordersTable tbody");
-            const ordersRef = ref(db, "Orders/");
+        
             get(ordersRef)
                 .then(snapshot => {
                     if (snapshot.exists()) {
@@ -217,6 +256,8 @@
         }
 
         document.addEventListener("DOMContentLoaded", loadOrders);
+        document.addEventListener("DOMContentLoaded", function(){toggleShopStatus(false);});
+
         setInterval(loadOrders, 2000);
     </script>
 </body>
