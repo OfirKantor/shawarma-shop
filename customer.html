@@ -91,7 +91,7 @@
             <label for="phone">Phone Number:</label>
             <input type="tel" id="phone" name="phone" required>
 
-            <div class="checkbox-group">
+            <div id="orderOptions" class="checkbox-group">
                 <label>
                     <input type="checkbox" name="options" value="Salad" data-price="10"> Salad (10)
                 </label>
@@ -120,6 +120,13 @@
         </div>
     </div>
 
+    <div id="preview-page" class="container" style="display: none;">
+        <h2>Order Preview</h2>
+        <div id="previewOrders"></div>
+        <p><strong>Total Amount:</strong> $<span id="previewTotal"></span></p>
+        <button id="newOrderBtn" type="button">New Order</button>
+    </div>
+    
     <div id="closed-page" style="display: none;">
         <h2>Our Shop is Closed</h2>
         <p>We open at 10 AM!</p>
@@ -202,10 +209,11 @@
                     }
 
                     customerInfo = { name, phone };
-                    document.getElementById('name').value = name;
-                    document.getElementById('phone').value = phone;
+                   
                     document.getElementById('name').setAttribute("readonly", true);
                     document.getElementById('phone').setAttribute("readonly", true);
+                    document.getElementById('name').textContent = name;
+                    document.getElementById('phone').textContent = phone;
                 }
 
                 if (!options.length) {
@@ -218,7 +226,10 @@
                 orders.push(order);
                 updateOrderReview();
 
-                document.getElementById('orderForm').reset();
+                const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"]'); // Select all checkboxes inside #orderOptions
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false; // Uncheck each checkbox
+                });
                 document.getElementById('totalPrice').textContent = "0"; // Reset total price
 
                 document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
@@ -268,9 +279,33 @@
                 });
 
                 alert("Orders sent successfully!");
+
+                // Display the preview page with orders
+                const previewOrders = document.getElementById('previewOrders');
+                previewOrders.innerHTML = '';
+                let totalAmount = 0;
+
+                orders.forEach(order => {
+                    const orderDiv = document.createElement('div');
+                    orderDiv.innerHTML = `<p>${order.options.join(', ')} (${order.takeOut || 'Dine-in'}) - $${order.totalPrice}</p>`;
+                    previewOrders.appendChild(orderDiv);
+                    totalAmount += order.totalPrice;
+                });
+
+                document.getElementById('previewTotal').textContent = totalAmount;
+
+                // Hide order page and show preview page
+                document.getElementById('order-page').style.display = 'none';
+                document.getElementById('preview-page').style.display = 'block';
+
                 orders = []; // Reset orders after sending
-                updateOrderReview(); // Clear review section
             }
+
+            document.querySelector('#newOrderBtn').addEventListener('click', () => {
+                // Reload the page to start a new order
+                location.reload();
+            });
+
 
             loadOrdersPage();
         });
