@@ -133,7 +133,10 @@
             </div>
 
             <label>
-                <input type="checkbox" id="TakeOut" value="טייק אווי" data-price="10"> טייק אווי (10)
+                <input type="checkbox" id="TakeOut" value="משלוח" data-price="10"> משלוח (10)
+                <label for="addressName">כתובת למשלוח:</label>
+                <input type="text" id="addressTextBox" name="addressTextBox" required readonly>
+    
             </label>
 
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
@@ -161,6 +164,15 @@
     </div>
 
     <script type="module">
+        document.getElementById('TakeOut').addEventListener('change', function() {
+            const textbox = document.getElementById('addressTextBox');
+            if (this.checked) {
+                textbox.removeAttribute('readonly'); // Make the text box writable
+            } else {
+                textbox.setAttribute('readonly', true); // Make the text box readonly
+            }
+        });
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getDatabase, push, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -220,48 +232,7 @@
                 document.getElementById('price').textContent = price;
             }
 
-            function addOrder() {
-                const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
-                const takeOutCheckbox = document.getElementById("TakeOut");
-                const takeOut = takeOutCheckbox.checked ? "Take out" : "";
-                const price = parseInt(document.getElementById('price').textContent, 10);
-
-                // If this is the first order, capture name and phone
-                if (!customerInfo) {
-                    const name = document.getElementById('name').value;
-                    const phone = document.getElementById('phone').value;
-
-                    if (!name || !phone) {
-                        alert("Please enter your name and phone number.");
-                        return;
-                    }
-
-                    customerInfo = { name, phone };
-                   
-                    document.getElementById('name').setAttribute("readonly", true);
-                    document.getElementById('phone').setAttribute("readonly", true);
-                    document.getElementById('name').textContent = name;
-                    document.getElementById('phone').textContent = phone;
-                }
-
-                if (!options.length) {
-                    alert("Please select at least one option.");
-                    return;
-                }
-
-                const order = { ...customerInfo, options, takeOut, price };
-
-                orders.push(order);
-                updateOrderReview();
-
-                const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"]'); // Select all checkboxes inside #orderOptions
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false; // Uncheck each checkbox
-                });
-                document.getElementById('price').textContent = "0"; // Reset total price
-
-                document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
-            }
+            
 
             function updateOrderReview() {
                 const orderReviewList = document.getElementById("orderReviewList");
@@ -294,13 +265,60 @@
                 updateOrderReview();
             }
 
-            function sendOrders() {
-                if (orders.length === 0) {
-                    alert("You have no orders to send.");
+            function addOrder() {
+                const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+                const takeOutCheckbox = document.getElementById("TakeOut");
+                const address = document.getElementById('addressTextBox').value;
+                const price = parseInt(document.getElementById('price').textContent, 10);
+
+                // If this is the first order, capture name and phone
+                if (!customerInfo) {
+                    const name = document.getElementById('name').value;
+                    const phone = document.getElementById('phone').value;
+
+                    if (!name || !phone) {
+                        alert("יש למלא שם ומספר טלפון");
+                        return;
+                    }
+
+                    customerInfo = { name, phone };
+
+                    takeOutCheckbox.addEventListener('click', function (event) {
+                        event.preventDefault(); // Prevent the checkbox from changing state
+                    });
+                    document.getElementById('addressTextBox').setAttribute("readonly", true);
+                    document.getElementById('name').setAttribute("readonly", true);
+                    document.getElementById('phone').setAttribute("readonly", true);
+                    document.getElementById('name').textContent = name;
+                    document.getElementById('phone').textContent = phone;
+                }
+
+                if (!options.length) {
+                    alert("יש לבחור לפחות אחת מהתוספות");
                     return;
                 }
 
-                var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו 'כן' כדי לשלוח");
+                const order = { ...customerInfo, options, address, price };
+
+                orders.push(order);
+                updateOrderReview();
+
+                const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"]'); // Select all checkboxes inside #orderOptions
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false; // Uncheck each checkbox
+                });
+                document.getElementById('price').textContent = "0"; // Reset total price
+
+                document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
+            }
+
+            function sendOrders() {
+                if (orders.length === 0) {
+                    alert("אין הזמנות לשליחה");
+                    return;
+                }
+
+                var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו OK כדי לשלוח");
 
                 if(!userResponse){
                     return;
@@ -319,7 +337,7 @@
 
                 orders.forEach(order => {
                     const orderDiv = document.createElement('div');
-                    orderDiv.innerHTML = `<p>${order.options.join(', ')} - $${order.price}</p>`;
+                    orderDiv.innerHTML = `<p>${order.options.join(', ')} - ₪${order.price}</p>`;
                     previewOrders.appendChild(orderDiv);
                     totalAmount += order.price;
                 });

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shawarma Orders</title>
+    <title>הזמנות שווארמה</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -11,6 +11,7 @@
             padding: 0;
             background-color: #f9f9f9;
             color: #333;
+            direction: rtl; /* Set RTL direction */
         }
 
         .container {
@@ -36,7 +37,7 @@
         }
 
         th, td {
-            text-align: left;
+            text-align: right; /* Align text to the right */
             padding: 12px;
             border-bottom: 1px solid #ddd;
         }
@@ -74,7 +75,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-right: 10px;
+            margin-left: 10px; /* Adjust for RTL layout */
             transition: background-color 0.3s;
         }
 
@@ -83,19 +84,19 @@
         }
 
         button:last-child {
-            margin-right: 0;
+            margin-left: 0; /* Adjust for RTL layout */
         }
 
         .floating-buttons {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            left: 20px; /* Adjust for RTL layout */
             z-index: 1000;
             display: flex;
         }
 
         .floating-buttons button {
-            margin-right: 10px;
+            margin-left: 10px; /* Adjust for RTL layout */
         }
 
         @media (max-width: 600px) {
@@ -117,15 +118,15 @@
 <body>
 
     <div id="customer-orders-page" class="container">
-        <h2>Customer Orders</h2>
+        <h2>הזמנות</h2>
         <table id="ordersTable">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Options</th>
-                    <th>TakeOut</th>
-                    <th>Price</th>
+                    <th>שם</th>
+                    <th>טלפון</th>
+                    <th>מנה</th>
+                    <th>כתובת למשלוח</th>
+                    <th>מחיר</th>
                 </tr>
             </thead>
             <tbody>
@@ -134,43 +135,38 @@
         </table>
 
         <div style="text-align: center;">
-            <button id="clearDbBtn" type="button">Clear Orders</button>
+            <button id="clearDbBtn" type="button">נקה הזמנות</button>
         </div>
     </div>
 
     <div id="customer-orders-floating-buttons" class="floating-buttons">
         <button id="shopStatusBtn" type="button">...</button>
-        <button id="closeDayBtn" type="button"  style="background-color: black">Close Day</button>
+        <button id="closeDayBtn" type="button" style="background-color: black">סגירת יום</button>
     </div>
 
     <div id="close-day-page" class="container" style="display: none;">
-        <h2>Todays Orders</h2>
+        <h2>סיכום הזמנות היום</h2>
         <table id="previousOrdersTable">
             <thead class="black-header">
                 <tr>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Options</th>
-                    <th>TakeOut</th>
-                    <th>Price</th>
+                    <th>שם</th>
+                    <th>טלפון</th>
+                    <th>אופציות</th>
+                    <th>לקחת</th>
+                    <th>מחיר</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Orders will be displayed here -->
-            </tbody>clear all
-
+            </tbody>
         </table>
-        <p><strong>Total Price:</strong> <span id="totalPrice">0</span></p>
-
+        <p><strong>סך הכל:</strong> <span id="totalPrice">0</span></p>
     </div>
 
     <div id="close-day-floating-buttons" class="floating-buttons" style="display: none;">
-        <button id="clearPrevOrdersBtn" type="button" style="background-color: red">Clear all</button>
-        <button id="backBtn" type="button"  style="background-color: black">Back</button>
+        <button id="clearPrevOrdersBtn" type="button" style="background-color: red">נקה הכל</button>
+        <button id="backBtn" type="button" style="background-color: black">חזור</button>
     </div>
-
-    <!-- Floating buttons -->
-   
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -233,7 +229,7 @@
             // const ordersTable1 = document.querySelector("#ordersTable tbody");
             // const rows = ordersTable1.querySelectorAll("tr");
             // if(rows.size != 0){
-            //     var userResponse = confirm("?יש הזמנות שלא ניקית מהמסך הראשי. להוסיף אותן למסך הסיכום");
+            //     var userResponse = confirm("יש הזמנות שלא ניקית מהמסך הראשי. להוסיף אותן למסך הסיכום?");
             //     if(userResponse){
             //         clearOrders();
             //     }
@@ -255,13 +251,13 @@
         function clearOrders() {
             var userResponse = true;
             if(markedRows.size == 0){
-                userResponse = confirm("This action will delete all rows. Do you want to continue?");
+                userResponse = confirm("שים לב! פעולה זו תמחק את כל ההזמנות הקיימות. האם אתה בטוח?");
                 if(userResponse){
                     addAllOrdersToMap();
                 }
             }
             else{
-                userResponse = confirm("This action will delete all marked rows. Do you want to continue?");
+                userResponse = confirm("למחוק את כל ההזמנות המסומנות?");
             }
             if (userResponse) {
             const deletePromises = Array.from(markedRows).map((order) => {
@@ -281,9 +277,14 @@
             }
         }
 
-        function clearPreviousOrders(){
-            set(ref(db, `PreviousOrders/`), null);
-            loadClosingDay();
+        async function clearPreviousOrders(){
+            var userResponse = confirm("שים לב! פעולה זו תמחק את כל ההזמנות השמורות. האם אתה בטוח?");
+            if(userResponse){
+                await set(ref(db, `PreviousOrders/`), null);
+                loadClosingDay();
+            }
+           
+            
         }
 
         function toggleShopStatus(changeStatus = false) {
@@ -297,11 +298,11 @@
                             isShopOpen = !config.is_shop_open;
                         }
                         if(isShopOpen){
-                            toggleButton.textContent = "Shop is Open";
+                            toggleButton.textContent = "הדוכן פתוח";
                             toggleButton.style.backgroundColor = "green";
                         }
                         else{
-                            toggleButton.textContent = "Shop is closed";
+                            toggleButton.textContent = "הדוכן סגור";
                             toggleButton.style.backgroundColor = "red";
                         }
                     }
@@ -337,18 +338,18 @@
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
                                 <td>${order.options.join(", ")}</td>
-                                <td>${order.takeOut}</td>
-                                <td>${order.totalPrice || "N/A"}</td>
+                                <td>${order.address}</td>
+                                <td>${order.price || "N/A"}</td>
                             `;
                             ordersTable.appendChild(row);
                         });
                     } else {
-                        ordersTable.innerHTML = '<tr><td colspan="5">No orders available</td></tr>';
+                        ordersTable.innerHTML = "";
                     }
                 })
                 .catch(error => {
                     console.error("Error loading orders:", error);
-                    ordersTable.innerHTML = '<tr><td colspan="5">Error loading orders</td></tr>';
+                    ordersTable.innerHTML = '<tr><td colspan="5">שגיאה בטעינת ההזמנות</td></tr>';
                 });
         }
 
@@ -367,7 +368,7 @@
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
                                 <td>${order.options.join(", ")}</td>
-                                <td>${order.takeOut}</td>
+                                <td>${order.address}</td>
                                 <td>${order.price || "N/A"}</td>
                             `;
                             OverallIncome += order.price;
@@ -375,7 +376,7 @@
                         });
                         document.getElementById('totalPrice').textContent = OverallIncome;
                     } else {
-                        previousOrdersTable.innerHTML = '<tr><td colspan="5">No orders available</td></tr>';
+                        previousOrdersTable.innerHTML = "";
                     }
                 })
                 .catch(error => {
