@@ -81,11 +81,16 @@
             margin-right: 0;
         }
 
-        .floating-button {
+        .floating-buttons {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 1000;
+            display: flex;
+        }
+
+        .floating-buttons button {
+            margin-right: 10px;
         }
 
         @media (max-width: 600px) {
@@ -127,8 +132,11 @@
         </div>
     </div>
 
-    <!-- Floating button -->
-    <button id="shopStatusBtn" class="floating-button" type="button">...</button>
+    <!-- Floating buttons -->
+    <div class="floating-buttons">
+        <button id="shopStatusBtn" type="button">...</button>
+        <button id="testBtn" type="button"  style="background-color: black">Close Day</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -146,44 +154,70 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase();
-        const markedRows = new Set();
+        const markedRows = new Map();
 
         document.querySelector("#clearDbBtn").addEventListener("click", clearOrders);
         document.querySelector("#shopStatusBtn").addEventListener("click", function(){toggleShopStatus(true);});
+        document.querySelector("#testBtn").addEventListener("click", function(){alert("Test Button clicked!");}); // Test button click handler
+
+        document.addEventListener("DOMContentLoaded", loadOrders);
+        document.addEventListener("DOMContentLoaded", function(){toggleShopStatus(false);});
+
+        function addAllOrdersToMap() {
+            markedRows.clear();
+            const tableRows = document.querySelectorAll("#ordersTable tbody tr"); // Select all rows in the tbody
+
+            tableRows.forEach((row, index) => {
+                const id = row.dataset.id;
+                const cells = row.querySelectorAll("td"); // Get all cells in the current row
+
+                const optionsString = cells[2]?.textContent || ""; // Get the options as a string
+                const options = optionsString.split(",").map(option => option.trim()); // Split and trim whitespace
+
+                const order = {
+                    name: cells[0]?.textContent || "",     // Name
+                    phone: cells[1]?.textContent || "",    // Phone
+                    options: options,  // Options
+                    takeOut: cells[3]?.textContent || "",  // TakeOut
+                    price: cells[4]?.textContent || ""     // Price
+                };
+                markedRows.set(id, order);
+                console.log(`Order ${index + 1}:`, order);
+            });
+        }
 
         function clearOrders() {
             var userResponse = true;
-            var clearAll = false;
-            if(markedRows.size === 0){
+            if(markedRows.size == 0){
                 userResponse = confirm("This action will delete all rows. Do you want to continue?");
-                clearAll = true;
+                if(userResponse){
+                    addAllOrdersToMap();
+                }
             }
             else{
                 userResponse = confirm("This action will delete all marked rows. Do you want to continue?");
             }
             if (userResponse) {
-                if(clearAll){
-                    set(ref(db, `Orders/`), null)
-                }
-                else{
-                const deletePromises = Array.from(markedRows).map(id => set(ref(db, `Orders/${id}`), null));
-                Promise.all(deletePromises)
-                    .then(() => {
-                        markedRows.clear();
-                        loadOrders();
-                    })
-                    .catch(error => {
-                        console.error("Error deleting marked orders:", error);
-                        alert("An error occurred while deleting marked orders.");
-                    });
-                }
+            const deletePromises = Array.from(markedRows).map((order) => {
+                set(ref(db, `Orders/${order[0]}`), null);
+                set(ref(db, `PreviousOrders/${order[0]}`), order[1]);
+            });
+            Promise.all(deletePromises)
+                .then(() => {
+                    markedRows.clear();
+                    loadOrders();
+                })
+                .catch(error => {
+                    console.error("Error deleting marked orders:", error);
+                    alert("An error occurred while deleting marked orders.");
+                });
+            
             }
         }
 
         const toggleButton = document.getElementById('shopStatusBtn');
         const configRef = ref(db, "config/");
 
-        
         function toggleShopStatus(changeStatus = false) {
             get(configRef)
                 .then(snapshot => {
@@ -202,7 +236,6 @@
                             toggleButton.textContent = "Shop is closed";
                             toggleButton.style.backgroundColor = "red";
                         }
-                        
                     }
                 })
                 .catch(error => {
@@ -214,7 +247,6 @@
         const ordersRef = ref(db, "Orders/");
 
         function loadOrders() {
-        
             get(ordersRef)
                 .then(snapshot => {
                     if (snapshot.exists()) {
@@ -223,13 +255,13 @@
                         Object.entries(data).forEach(([id, order]) => {
                             const row = document.createElement("tr");
                             row.dataset.id = id;
-
+                            
                             row.addEventListener("click", function () {
                                 if (markedRows.has(id)) {
                                     markedRows.delete(id);
                                     row.classList.remove("marked");
                                 } else {
-                                    markedRows.add(id);
+                                    markedRows.set(id, order);
                                     row.classList.add("marked");
                                 }
                             });
@@ -254,9 +286,6 @@
                     ordersTable.innerHTML = '<tr><td colspan="5">Error loading orders</td></tr>';
                 });
         }
-
-        document.addEventListener("DOMContentLoaded", loadOrders);
-        document.addEventListener("DOMContentLoaded", function(){toggleShopStatus(false);});
 
         setInterval(loadOrders, 2000);
     </script>
