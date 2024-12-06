@@ -24,6 +24,21 @@
         .checkbox-group {
             margin-bottom: 15px;
         }
+
+        .send-button {
+            background-color: #2e65db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .send-button:hover {
+            background-color: #1a489e;
+        }
+
         button {
             background-color: #28a745;
             color: white;
@@ -116,7 +131,7 @@
             <h3>Your Orders</h3>
             <div id="orderReviewList"></div>
             <p><strong>Overall Price:</strong> $<span id="overallPrice">0</span></p>
-            <button id="sendOrderBtn" type="button">Send Orders</button>
+            <button id="sendOrderBtn" type="button" class="send-button">Send Orders</button>
         </div>
     </div>
 
