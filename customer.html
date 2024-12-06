@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shawarma Order</title>
+    <title>הזמנת שווארמה</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             margin: 20px;
+            direction: rtl;
         }
         .container {
             max-width: 500px;
@@ -98,53 +99,65 @@
 </head>
 <body>
     <div id="order-page" class="container" style="display: none;">
-        <h2>Customize Your Shawarma</h2>
+        <h2>מה תרצו להזמין?</h2>
         <form id="orderForm">
-            <label for="name">Name:</label>
+            <label for="name">שם:</label>
             <input type="text" id="name" name="name" required>
 
-            <label for="phone">Phone Number:</label>
+            <label for="phone">מספר טלפון:</label>
             <input type="tel" id="phone" name="phone" required>
 
             <div id="orderOptions" class="checkbox-group">
                 <label>
-                    <input type="checkbox" name="options" value="Salad" data-price="10"> Salad (10)
+                    <input type="checkbox" name="options" value="טחינה" data-price="2"> טחינה (2)
                 </label>
                 <label>
-                    <input type="checkbox" name="options" value="Ketchup" data-price="5"> Ketchup (5)
+                    <input type="checkbox" name="options" value="חומוס" data-price="2"> חומוס (2)
                 </label>
                 <label>
-                    <input type="checkbox" name="options" value="Meat" data-price="20"> Meat (20)
+                    <input type="checkbox" name="options" value="עמבה" data-price="5"> עמבה (5)
                 </label>
+                <label>
+                    <input type="checkbox" name="options" value="סלט ירקות" data-price="5"> סלט ירקות (5)
+                </label>
+                <label>
+                    <input type="checkbox" name="options" value="סלט כרוב" data-price="5"> סלט כרוב (5)
+                </label>
+                <label>
+                    <input type="checkbox" name="options" value="חריף" data-price="2"> חריף (2)
+                </label>
+                <label>
+                    <input type="checkbox" name="options" value="צ'יפס" data-price="10"> צ'יפס (10)
+                </label>
+                
             </div>
 
             <label>
-                <input type="checkbox" id="TakeOut" value="Take out" data-price="10"> Take out (10)
+                <input type="checkbox" id="TakeOut" value="טייק אווי" data-price="10"> טייק אווי (10)
             </label>
 
-            <p><strong>Total Price:</strong> <span id="totalPrice">0</span></p>
+            <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
 
-            <button id="addOrderBtn" type="button">Add Order</button>
+            <button id="addOrderBtn" type="button">הוסף הזמנה</button>
         </form>
 
         <div id="orderReviewSection" class="order-review" style="display: none;">
-            <h3>Your Orders</h3>
+            <h3>סיכום הזמנה</h3>
             <div id="orderReviewList"></div>
-            <p><strong>Overall Price:</strong> $<span id="overallPrice">0</span></p>
-            <button id="sendOrderBtn" type="button" class="send-button">Send Orders</button>
+            <p><strong>מחיר כולל:</strong> ₪<span id="overallPrice">0</span></p>
+            <button id="sendOrderBtn" type="button" class="send-button">שלח הזמנות</button>
         </div>
     </div>
 
     <div id="preview-page" class="container" style="display: none;">
-        <h2>Order Preview</h2>
+        <h2>ההזמנה נשלחה!</h2>
         <div id="previewOrders"></div>
-        <p><strong>Total Amount:</strong> $<span id="previewTotal"></span></p>
-        <button id="newOrderBtn" type="button">New Order</button>
+        <p><strong>סכום כולל:</strong> ₪<span id="previewTotal"></span></p>
+        <button id="newOrderBtn" type="button">הזמנה חדשה</button>
     </div>
     
     <div id="closed-page" style="display: none;">
-        <h2>Our Shop is Closed</h2>
-        <p>We open at 10 AM!</p>
+        <h2>החנות סגורה</h2>
     </div>
 
     <script type="module">
@@ -196,22 +209,22 @@
             sendOrderBtn.addEventListener('click', sendOrders);
 
             const checkboxes = document.querySelectorAll('input[name="options"], #TakeOut');
-            checkboxes.forEach(checkbox => checkbox.addEventListener('change', updateTotalPrice));
+            checkboxes.forEach(checkbox => checkbox.addEventListener('change', updatePrice));
 
-            function updateTotalPrice() {
+            function updatePrice() {
                 const selectedOptions = Array.from(document.querySelectorAll('input[name="options"]:checked, #TakeOut:checked'));
-                const totalPrice = selectedOptions.reduce((total, option) => {
+                const price = selectedOptions.reduce((total, option) => {
                     return total + parseInt(option.dataset.price, 10);
                 }, 0);
 
-                document.getElementById('totalPrice').textContent = totalPrice;
+                document.getElementById('price').textContent = price;
             }
 
             function addOrder() {
                 const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
                 const takeOutCheckbox = document.getElementById("TakeOut");
                 const takeOut = takeOutCheckbox.checked ? "Take out" : "";
-                const totalPrice = parseInt(document.getElementById('totalPrice').textContent, 10);
+                const price = parseInt(document.getElementById('price').textContent, 10);
 
                 // If this is the first order, capture name and phone
                 if (!customerInfo) {
@@ -236,7 +249,7 @@
                     return;
                 }
 
-                const order = { ...customerInfo, options, takeOut, totalPrice };
+                const order = { ...customerInfo, options, takeOut, price };
 
                 orders.push(order);
                 updateOrderReview();
@@ -245,7 +258,7 @@
                 checkboxes.forEach(checkbox => {
                     checkbox.checked = false; // Uncheck each checkbox
                 });
-                document.getElementById('totalPrice').textContent = "0"; // Reset total price
+                document.getElementById('price').textContent = "0"; // Reset total price
 
                 document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
             }
@@ -260,8 +273,8 @@
                     orderDiv.classList.add('order-item');
 
                     orderDiv.innerHTML = `
-                        <span>${order.options.join(', ')} - $${order.totalPrice}</span>
-                        <button data-index="${index}">Remove</button>
+                        <span>${order.options.join(', ')} -  ₪${order.price}</span>
+                        <button data-index="${index}">הסר</button>
                     `;
                     orderReviewList.appendChild(orderDiv);
 
@@ -270,7 +283,7 @@
                         removeOrder(index);
                     });
 
-                    overallPrice += order.totalPrice;
+                    overallPrice += order.price;
                 });
 
                 document.getElementById('overallPrice').textContent = overallPrice;
@@ -287,13 +300,17 @@
                     return;
                 }
 
+                var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו 'כן' כדי לשלוח");
+
+                if(!userResponse){
+                    return;
+                }
+
                 orders.forEach(order => {
                     push(ref(db, "Orders/"), order).catch((error) => {
                         console.error("Error sending order:", error);
                     });
                 });
-
-                alert("Orders sent successfully!");
 
                 // Display the preview page with orders
                 const previewOrders = document.getElementById('previewOrders');
@@ -302,9 +319,9 @@
 
                 orders.forEach(order => {
                     const orderDiv = document.createElement('div');
-                    orderDiv.innerHTML = `<p>${order.options.join(', ')} (${order.takeOut || 'Dine-in'}) - $${order.totalPrice}</p>`;
+                    orderDiv.innerHTML = `<p>${order.options.join(', ')} - $${order.price}</p>`;
                     previewOrders.appendChild(orderDiv);
-                    totalAmount += order.totalPrice;
+                    totalAmount += order.price;
                 });
 
                 document.getElementById('previewTotal').textContent = totalAmount;
