@@ -95,6 +95,38 @@
         input[readonly] {
             background-color: #f0f0f0;
         }
+
+        .order-container {
+            position: relative; /* Needed for the button's absolute positioning */
+            display: flex;
+            align-items: flex-start; /* Align items to the top of the container */
+            min-height: 100px; /* Sets a consistent height for all orders */
+        }
+
+        .order-content {
+            display: flex;
+            gap: 10px; /* Space between the text and button */
+            width: 100%;
+            align-items: flex-start; /* Align content to the top */
+            position: relative;
+        }
+
+        .order-text {
+            flex-grow: 1; /* Makes the text span fill available space */
+            max-width: calc(100% - 100px); /* Ensures text doesn’t overlap the button */
+            word-wrap: break-word; /* Ensures text breaks onto the next line if necessary */
+        }
+
+        .order-button {
+            position: absolute; /* Fixes the button's position */
+            left: 0; /* Aligns the button to the right edge */
+            top: 10px; /* Adjust this value to control the vertical placement */
+            width: 80px; /* Ensures uniform button width */
+            height: 40px; /* Ensures uniform button height */
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box; /* Ensures padding doesn’t affect size */
+        }
     </style>
 </head>
 <body>
@@ -105,31 +137,35 @@
 
             <label></label>
             <input type="tel" id="phone" name="phone" placeholder="מספר פלאפון" maxlength="10" required dir="rtl">
+            <label></label>
 
-            <div id="orderOptions" class="checkbox-group">
-                <label>
-                    <input type="checkbox" name="options" value="טחינה" data-price="2"> טחינה (2)
-                </label>
-                <label>
-                    <input type="checkbox" name="options" value="חומוס" data-price="2"> חומוס (2)
-                </label>
-                <label>
-                    <input type="checkbox" name="options" value="עמבה" data-price="5"> עמבה (5)
-                </label>
-                <label>
-                    <input type="checkbox" name="options" value="סלט ירקות" data-price="5"> סלט ירקות (5)
-                </label>
-                <label>
-                    <input type="checkbox" name="options" value="סלט כרוב" data-price="5"> סלט כרוב (5)
-                </label>
-                <label>
-                    <input type="checkbox" name="options" value="חריף" data-price="2"> חריף (2)
-                </label>
-                <label>
-                    <input type="checkbox" name="options" value="צ'יפס" data-price="10"> צ'יפס (10)
-                </label>
-                
+            <label>
+                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"> פיתה שווארמה (35₪)
+            </label>
+
+            <div id="orderOptions" class="checkbox-group" style="display: none;">
+                <input type="checkbox" name="options" value="חומוס"> חומוס
+                <input type="checkbox" name="options" value="טחינה"> טחינה
+                <input type="checkbox" name="options" value="עמבה"> עמבה
+                <input type="checkbox" name="options" value="חריף"> חריף
+                <input type="checkbox" name="options" value="סלט ירקות"> מלפפון
+                <input type="checkbox" name="options" value="כעבנייה"> עגבנייה
+                <input type="checkbox" name="options" value="כרוב לבן"> כרוב לבן
+                <input type="checkbox" name="options" value="כרוב סגול"> כרוב סגול
+                <input type="checkbox" name="options" value="בצל עם סומק"> בצל עם סומק
+                <input type="checkbox" name="options" value="מלפפון חמוץ"> מלפפון חמוץ
+                <input type="checkbox" name="options" value="פטרוזיליה"> פטרוזיליה
             </div>
+
+            <label>
+                <input type="checkbox" id="friesCheckBox" name="fries" value="צ'יפס" data-price="10"> צ'יפס (10₪)
+            </label>
+            <label>
+                <input type="checkbox" id="cokeCheckBox" name="coke" value="קולה" data-price="5"> פחית קולה (5₪)
+            </label>
+            <label>
+                <input type="checkbox" id="zeroCheckBox" name="zero" value="זירו" data-price="5"> פחית זירו (5₪)
+            </label>
 
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
 
@@ -175,6 +211,15 @@
             }
         });
 
+        const orderOptions = document.getElementById('orderOptions');
+        document.getElementById('ShawarmaCheckBox').addEventListener('change', function () {
+            if (this.checked) {
+                orderOptions.style.display = 'block'; // Show the group
+            } else {
+                orderOptions.style.display = 'none'; // Hide the group
+            }
+        });
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getDatabase, push, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -194,7 +239,6 @@
         const shippingCheckbox = document.getElementById("shipping");
 
         let orders = [];
-        let customerInfo = null; // Store customer name and phone
 
 
         function updateShippingFee(){
@@ -210,6 +254,7 @@
             }
             document.getElementById('overallPrice').textContent = overallPrice;
         }
+
         // Load the order page, check if the shop is open or closed
         function loadOrdersPage() {
             const configRef = ref(db, "config/");
@@ -240,11 +285,11 @@
         shippingCheckbox.addEventListener('click', updateShippingFee);
 
 
-        const checkboxes = document.querySelectorAll('input[name="options"]');
+        const checkboxes = document.querySelectorAll('input[name="Shawarma"], input[name="fries"], input[name="coke"], input[name="zero"]');
         checkboxes.forEach(checkbox => checkbox.addEventListener('change', updatePrice));
 
         function updatePrice() {
-            const selectedOptions = Array.from(document.querySelectorAll('input[name="options"]:checked'));
+            const selectedOptions = Array.from(document.querySelectorAll('input[name="Shawarma"]:checked, input[name="fries"]:checked, input[name="coke"]:checked, input[name="zero"]:checked'));
             var price = selectedOptions.reduce((total, option) => {
                 return total + parseInt(option.dataset.price, 10);
             }, 0);
@@ -262,9 +307,17 @@
                 orderDiv.classList.add('order-item');
 
                 orderDiv.innerHTML = `
-                    <span>${order.options.join(', ')} -  ₪${order.price}</span>
-                    <button data-index="${index}">הסר</button>
+                    <div class="order-content">
+                        <span class="order-text">
+                            ${order.options.join(', ')}<br>
+                            ${order.additions}<br>
+                            ${order.drinks}<br>
+                            ₪${order.price}
+                        </span>
+                        <button class="order-button" data-index="${index}">הסר</button>
+                    </div>
                 `;
+
                 orderReviewList.appendChild(orderDiv);
 
                 // Remove button functionality
@@ -283,11 +336,23 @@
             updateOrderReview();
         }
 
-        function addOrder() {
-            const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
-            const price = parseInt(document.getElementById('price').textContent, 10);
-            const address = "";
+        var ShawarmaCheckBox = document.getElementById('ShawarmaCheckBox')
+        var friesCheckBox = document.getElementById('friesCheckBox')
+        var cokeCheckBox = document.getElementById('cokeCheckBox')
+        var zeroCheckBox = document.getElementById('zeroCheckBox')
 
+        
+        let customerInfo = null; // Store customer name and phone
+        function addOrder() {
+            var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+            const price = parseInt(document.getElementById('price').textContent, 10);
+            const additions = friesCheckBox.checked ? friesCheckBox.value : "";
+            const coke = cokeCheckBox.checked ? cokeCheckBox.value : "";
+            const zero = zeroCheckBox.checked ? zeroCheckBox.value : "";
+            const address = "";
+            const drinks = [cokeCheckBox.checked ? cokeCheckBox.value : "", zeroCheckBox.checked ? zeroCheckBox.value : ""]
+                .filter(Boolean)
+                .join(",");
             // If this is the first order, capture name and phone
             if (!customerInfo) {
                 const name = document.getElementById('name').value;
@@ -305,22 +370,30 @@
                 document.getElementById('phone').textContent = phone;
             }
 
-            if (!options.length) {
-                alert("יש לבחור לפחות אחת מהתוספות");
+            if (!ShawarmaCheckBox.checked && !friesCheckBox.checked && !cokeCheckBox.checked && !zeroCheckBox.checked) {
+                alert("לא נבחרה מנה");
                 return;
             }
 
-            const order = { ...customerInfo, options, address, price };
+            if (ShawarmaCheckBox.checked && !options.length) {
+                alert("לא נבחרו תוספות לשווארמה");
+                return;
+            }
+            if(!ShawarmaCheckBox.checked){
+                options = [""];
+            }
+
+            const order = { ...customerInfo, options, additions, drinks, address, price };
 
             orders.push(order);
             updateOrderReview();
 
-            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"]'); // Select all checkboxes inside #orderOptions
+            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"],#ShawarmaCheckBox, #friesCheckBox , #cokeCheckBox ,#zeroCheckBox');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false; // Uncheck each checkbox
             });
             document.getElementById('price').textContent = "0"; // Reset total price
-
+            document.getElementById('orderOptions').style.display = 'none';
             document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
         }
 
@@ -364,7 +437,12 @@
 
             orders.forEach(order => {
                 const orderDiv = document.createElement('div');
-                orderDiv.innerHTML = `<p>${order.options.join(', ')} - ₪${order.price}</p>`;
+                orderDiv.innerHTML = ` <span class="order-text">
+                                            ${order.options.join(', ')}<br>
+                                            ${order.additions}<br>
+                                            ${order.drinks}<br>
+                                            ₪${order.price}
+                                        </span>`;
                 previewOrders.appendChild(orderDiv);
                 totalAmount += order.price;
             });
