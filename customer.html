@@ -101,11 +101,10 @@
     <div id="order-page" class="container" style="display: none;">
         <h2>מה תרצו להזמין?</h2>
         <form id="orderForm">
-            <label for="name">שם:</label>
-            <input type="text" id="name" name="name" required>
+            <input type="text" id="name" name="name" placeholder="שם" maxlength="25" required dir="rtl">
 
-            <label for="phone">מספר טלפון:</label>
-            <input type="tel" id="phone" name="phone" required>
+            <label></label>
+            <input type="tel" id="phone" name="phone" placeholder="מספר פלאפון" maxlength="10" required dir="rtl">
 
             <div id="orderOptions" class="checkbox-group">
                 <label>
@@ -134,8 +133,7 @@
 
             <label>
                 <input type="checkbox" id="TakeOut" value="משלוח" data-price="10"> משלוח (10)
-                <label for="addressName">כתובת למשלוח:</label>
-                <input type="text" id="addressTextBox" name="addressTextBox" required readonly>
+                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="30" required readonly>
     
             </label>
 
