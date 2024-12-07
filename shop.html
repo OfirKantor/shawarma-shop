@@ -124,7 +124,9 @@
                 <tr>
                     <th>שם</th>
                     <th>טלפון</th>
-                    <th>מנה</th>
+                    <th>שווארמה</th>
+                    <th>תוספת</th>
+                    <th>שתייה</th>
                     <th>כתובת למשלוח</th>
                     <th>מחיר</th>
                 </tr>
@@ -151,8 +153,10 @@
                 <tr>
                     <th>שם</th>
                     <th>טלפון</th>
-                    <th>אופציות</th>
-                    <th>לקחת</th>
+                    <th>שווארמה</th>
+                    <th>תוספת</th>
+                    <th>שתייה</th>
+                    <th>כתובת למשלוח</th>
                     <th>מחיר</th>
                 </tr>
             </thead>
@@ -214,11 +218,13 @@
                 const options = optionsString.split(",").map(option => option.trim()); // Split and trim whitespace
 
                 const order = {
-                    name: cells[0]?.textContent || "",     // Name
-                    phone: cells[1]?.textContent || "",    // Phone
-                    options: options,  // Options
-                    takeOut: cells[3]?.textContent || "",  // TakeOut
-                    price: parseInt(cells[4]?.textContent || "0", 0)     // Price
+                    name: cells[0]?.textContent || "",
+                    phone: cells[1]?.textContent || "",
+                    options: options,
+                    additions: cells[3]?.textContent || "",
+                    drinks: cells[4]?.textContent || "",
+                    address: cells[5]?.textContent || "",  
+                    price: parseInt(cells[6]?.textContent || "0", 0)     // Price
                 };
                 markedRows.set(id, order);
                 console.log(`Order ${index + 1}:`, order);
@@ -338,6 +344,8 @@
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
                                 <td>${order.options.join(", ")}</td>
+                                <td>${order.additions}</td>
+                                <td>${order.drinks}</td>
                                 <td>${order.address}</td>
                                 <td>${order.price || "N/A"}</td>
                             `;
@@ -368,6 +376,8 @@
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
                                 <td>${order.options.join(", ")}</td>
+                                <td>${order.additions}</td>
+                                <td>${order.drinks}</td>
                                 <td>${order.address}</td>
                                 <td>${order.price || "N/A"}</td>
                             `;

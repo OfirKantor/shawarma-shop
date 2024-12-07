@@ -344,7 +344,7 @@
         
         let customerInfo = null; // Store customer name and phone
         function addOrder() {
-            const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+            var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
             const price = parseInt(document.getElementById('price').textContent, 10);
             const additions = friesCheckBox.checked ? friesCheckBox.value : "";
             const coke = cokeCheckBox.checked ? cokeCheckBox.value : "";
@@ -378,6 +378,9 @@
             if (ShawarmaCheckBox.checked && !options.length) {
                 alert("לא נבחרו תוספות לשווארמה");
                 return;
+            }
+            if(!ShawarmaCheckBox.checked){
+                options = [""];
             }
 
             const order = { ...customerInfo, options, additions, drinks, address, price };
@@ -434,7 +437,12 @@
 
             orders.forEach(order => {
                 const orderDiv = document.createElement('div');
-                orderDiv.innerHTML = `<p>${order.options.join(', ')} - ₪${order.price}</p>`;
+                orderDiv.innerHTML = ` <span class="order-text">
+                                            ${order.options.join(', ')}<br>
+                                            ${order.additions}<br>
+                                            ${order.drinks}<br>
+                                            ₪${order.price}
+                                        </span>`;
                 previewOrders.appendChild(orderDiv);
                 totalAmount += order.price;
             });
