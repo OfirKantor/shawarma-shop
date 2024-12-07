@@ -144,6 +144,68 @@
             width: 100px; /* Adjust the size of the logo */
             height: auto;
         }
+
+       /* Hide the default checkbox */
+        .checkbox-btn input[type="checkbox"] {
+            display: none;
+        }
+
+        /* Style the labels to look like buttons */
+        .checkbox-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Change background color of the entire label when the checkbox is checked */
+        .checkbox-btn input[type="checkbox"]:checked + span {
+            color: rgb(12, 182, 6);               /* White text */
+        }
+
+
+        /* Add a hover effect to the label */
+        .checkbox-btn:hover {
+            background-color: #ddd;
+        }
+
+         /* Hide the default checkbox */
+        .checkbox-btn2 input[type="checkbox"] {
+            display: none;
+        }
+        /* Style the labels to look like buttons */
+        .checkbox-btn2 {
+            display: block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Change background color of the entire label when the checkbox is checked */
+        .checkbox-btn2 input[type="checkbox"]:checked + span {
+            color: rgb(8, 39, 216);               /* White text */
+        }
+
+
+        /* Add a hover effect to the label */
+        .checkbox-btn2:hover {
+            background-color: #ddd;
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -155,35 +217,59 @@
             <input type="text" id="name" name="name" placeholder="שם" maxlength="25" required dir="rtl">
 
             <label></label>
-            <input type="tel" id="phone" name="phone" placeholder="מספר פלאפון" maxlength="10" required dir="rtl">
+            <input type="tel" id="phone" name="phone" placeholder="מספר נייד" maxlength="10" required dir="rtl">
             <label></label>
 
-            <label>
-                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"> פיתה שווארמה (35₪)
+            <label class="checkbox-btn2">
+                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"><span> פיתה שווארמה (35₪)</span>
             </label>
 
             <div id="orderOptions" class="checkbox-group" style="display: none;">
-                <input type="checkbox" name="options" value="חומוס"> חומוס
-                <input type="checkbox" name="options" value="חריף"> חריף
-                <input type="checkbox" name="options" value="מלפפון"> מלפפון
-                <input type="checkbox" name="options" value="עגבנייה"> עגבנייה
-                <input type="checkbox" name="options" value="כרוב לבן"> כרוב לבן
-                <input type="checkbox" name="options" value="כרוב סגול"> כרוב סגול
-                <input type="checkbox" name="options" value="בצל עם סומק"> בצל עם סומק
-                <input type="checkbox" name="options" value="מלפפון חמוץ"> מלפפון חמוץ
-                <input type="checkbox" name="options" value="פטרוזיליה"> פטרוזיליה
-                <input type="checkbox" name="options" value="טחינה"> טחינה
-                <input type="checkbox" name="options" value="עמבה"> עמבה
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="חומוס"> <span>חומוס</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="חריף"> <span>חריף</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="מלפפון"> <span>מלפפון</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="עגבנייה"> <span>עגבנייה</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="כרוב לבן"> <span>כרוב לבן</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="כרוב סגול"> <span>כרוב סגול</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="בצל עם סומק"> <span>בצל עם סומק</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="מלפפון חמוץ"> <span>מלפפון חמוץ</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="פטרוזיליה"> <span>פטרוזיליה</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="טחינה"> <span>טחינה</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="עמבה"> <span>עמבה</span>
+                </label>
             </div>
+            
+            
 
-            <label>
-                <input type="checkbox" id="friesCheckBox" name="fries" value="צ'יפס" data-price="10"> צ'יפס (10₪)
+            <label class="checkbox-btn2">
+                <input type="checkbox" id="friesCheckBox" name="fries" value="צ'יפס" data-price="10"><span> צ'יפס (10₪)</span>
             </label>
-            <label>
-                <input type="checkbox" id="cokeCheckBox" name="coke" value="קולה" data-price="5"> פחית קולה (5₪)
+            <label class="checkbox-btn2">
+                <input type="checkbox" id="cokeCheckBox" name="coke" value="קולה" data-price="5"><span> פחית קולה (5₪)</span>
             </label>
-            <label>
-                <input type="checkbox" id="zeroCheckBox" name="zero" value="זירו" data-price="5"> פחית זירו (5₪)
+            <label class="checkbox-btn2">
+                <input type="checkbox" id="zeroCheckBox" name="zero" value="זירו" data-price="5"><span> פחית זירו (5₪)</span>
             </label>
 
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
