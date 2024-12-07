@@ -127,12 +127,31 @@
             padding: 5px;
             box-sizing: border-box; /* Ensures padding doesn’t affect size */
         }
+        #order-page {
+            position: relative;
+            padding-top: 50px; /* Adds space at the top so the logo doesn’t overlap the text */
+        }
+
+        #preview-page {
+            position: relative;
+            padding-top: 50px; /* Adds space at the top so the logo doesn’t overlap the text */
+        }
+
+        #logo {
+            position: absolute;
+            top: 10px;  /* Adjust as necessary to place the logo vertically */
+            left: 10px; /* Adjust as necessary to place the logo horizontally */
+            width: 150px; /* Adjust the size of the logo */
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <div id="order-page" class="container" style="display: none;">
         <h2>מה תרצו להזמין?</h2>
         <form id="orderForm">
+            <img src="logo.jpg" alt="Logo" id="logo"/>
+
             <input type="text" id="name" name="name" placeholder="שם" maxlength="25" required dir="rtl">
 
             <label></label>
@@ -145,8 +164,6 @@
 
             <div id="orderOptions" class="checkbox-group" style="display: none;">
                 <input type="checkbox" name="options" value="חומוס"> חומוס
-                <input type="checkbox" name="options" value="טחינה"> טחינה
-                <input type="checkbox" name="options" value="עמבה"> עמבה
                 <input type="checkbox" name="options" value="חריף"> חריף
                 <input type="checkbox" name="options" value="סלט ירקות"> מלפפון
                 <input type="checkbox" name="options" value="עגבנייה"> עגבנייה
@@ -155,6 +172,8 @@
                 <input type="checkbox" name="options" value="בצל עם סומק"> בצל עם סומק
                 <input type="checkbox" name="options" value="מלפפון חמוץ"> מלפפון חמוץ
                 <input type="checkbox" name="options" value="פטרוזיליה"> פטרוזיליה
+                <input type="checkbox" name="options" value="טחינה"> טחינה
+                <input type="checkbox" name="options" value="עמבה"> עמבה
             </div>
 
             <label>
@@ -187,11 +206,15 @@
     </div>
 
     <div id="preview-page" class="container" style="display: none;">
-        <h2>ההזמנה נשלחה!</h2>
-        <div id="previewOrders"></div>
-        <p><strong>משלוח:</strong> <span id="shippingFeePreview">0</span></p>
-        <p><strong>סכום כולל:</strong> ₪<span id="previewTotal"></span></p>
-        <button id="newOrderBtn" type="button">הזמנה חדשה</button>
+        <form>
+            <img src="logo.jpg" alt="Logo" id="logo"/>
+            <h2>ההזמנה נשלחה!</h2>
+            <div id="previewOrders"></div>
+
+            <p><strong>משלוח:</strong> <span id="shippingFeePreview">0</span></p>
+            <p><strong>סכום כולל:</strong> ₪<span id="previewTotal"></span></p>
+            <button id="newOrderBtn" type="button">הזמנה חדשה</button>
+        </form>
     </div>
     
     <div id="closed-page" style="display: none;">
