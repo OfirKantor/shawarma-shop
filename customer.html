@@ -131,12 +131,6 @@
                 
             </div>
 
-            <label>
-                <input type="checkbox" id="TakeOut" value="משלוח" data-price="10"> משלוח (10)
-                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="30" required readonly>
-    
-            </label>
-
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
 
             <button id="addOrderBtn" type="button">הוסף הזמנה</button>
@@ -145,7 +139,13 @@
         <div id="orderReviewSection" class="order-review" style="display: none;">
             <h3>סיכום הזמנה</h3>
             <div id="orderReviewList"></div>
-            <p><strong>מחיר כולל:</strong> ₪<span id="overallPrice">0</span></p>
+            <label>
+                <input type="checkbox" id="shipping" value="משלוח" data-price="10"> משלוח (₪10)
+                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="30" required readonly>
+    
+            </label>
+            <p><strong>משלוח:</strong> <span id="shippingFee">0</span></p>
+            <p><strong>מחיר כולל:</strong> <span id="overallPrice">0</span></p>
             <button id="sendOrderBtn" type="button" class="send-button">שלח הזמנות</button>
         </div>
     </div>
@@ -153,6 +153,7 @@
     <div id="preview-page" class="container" style="display: none;">
         <h2>ההזמנה נשלחה!</h2>
         <div id="previewOrders"></div>
+        <p><strong>משלוח:</strong> <span id="shippingFeePreview">0</span></p>
         <p><strong>סכום כולל:</strong> ₪<span id="previewTotal"></span></p>
         <button id="newOrderBtn" type="button">הזמנה חדשה</button>
     </div>
@@ -162,7 +163,10 @@
     </div>
 
     <script type="module">
-        document.getElementById('TakeOut').addEventListener('change', function() {
+
+        document.addEventListener('DOMContentLoaded', loadOrdersPage);
+
+        document.getElementById('shipping').addEventListener('change', function() {
             const textbox = document.getElementById('addressTextBox');
             if (this.checked) {
                 textbox.removeAttribute('readonly'); // Make the text box writable
@@ -187,9 +191,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase();
 
+        const shippingCheckbox = document.getElementById("shipping");
+
         let orders = [];
         let customerInfo = null; // Store customer name and phone
 
+
+        function updateShippingFee(){
+            let overallPrice = parseInt(document.getElementById('overallPrice').textContent ,10)
+            let shippingFee = parseInt(shippingCheckbox.dataset.price, 10);
+            if(shippingCheckbox.checked){
+                document.getElementById('shippingFee').textContent = shippingCheckbox.dataset.price;
+                overallPrice += shippingFee;
+            }
+            else{
+                document.getElementById('shippingFee').textContent = 0;
+                overallPrice -= shippingFee;
+            }
+            document.getElementById('overallPrice').textContent = overallPrice;
+        }
         // Load the order page, check if the shop is open or closed
         function loadOrdersPage() {
             const configRef = ref(db, "config/");
@@ -211,152 +231,161 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const addOrderBtn = document.querySelector("#addOrderBtn");
-            const sendOrderBtn = document.querySelector("#sendOrderBtn");
 
-            addOrderBtn.addEventListener('click', addOrder);
-            sendOrderBtn.addEventListener('click', sendOrders);
+        const addOrderBtn = document.querySelector("#addOrderBtn");
+        const sendOrderBtn = document.querySelector("#sendOrderBtn");
 
-            const checkboxes = document.querySelectorAll('input[name="options"], #TakeOut');
-            checkboxes.forEach(checkbox => checkbox.addEventListener('change', updatePrice));
+        addOrderBtn.addEventListener('click', addOrder);
+        sendOrderBtn.addEventListener('click', sendOrders);
+        shippingCheckbox.addEventListener('click', updateShippingFee);
 
-            function updatePrice() {
-                const selectedOptions = Array.from(document.querySelectorAll('input[name="options"]:checked, #TakeOut:checked'));
-                const price = selectedOptions.reduce((total, option) => {
-                    return total + parseInt(option.dataset.price, 10);
-                }, 0);
 
-                document.getElementById('price').textContent = price;
-            }
+        const checkboxes = document.querySelectorAll('input[name="options"]');
+        checkboxes.forEach(checkbox => checkbox.addEventListener('change', updatePrice));
 
-            
+        function updatePrice() {
+            const selectedOptions = Array.from(document.querySelectorAll('input[name="options"]:checked'));
+            var price = selectedOptions.reduce((total, option) => {
+                return total + parseInt(option.dataset.price, 10);
+            }, 0);
 
-            function updateOrderReview() {
-                const orderReviewList = document.getElementById("orderReviewList");
-                orderReviewList.innerHTML = '';
-                let overallPrice = 0;
+            document.getElementById('price').textContent = price;
+        }
 
-                orders.forEach((order, index) => {
-                    const orderDiv = document.createElement('div');
-                    orderDiv.classList.add('order-item');
+        function updateOrderReview() {
+            const orderReviewList = document.getElementById("orderReviewList");
+            orderReviewList.innerHTML = '';
+            let overallPrice = 0;
 
-                    orderDiv.innerHTML = `
-                        <span>${order.options.join(', ')} -  ₪${order.price}</span>
-                        <button data-index="${index}">הסר</button>
-                    `;
-                    orderReviewList.appendChild(orderDiv);
+            orders.forEach((order, index) => {
+                const orderDiv = document.createElement('div');
+                orderDiv.classList.add('order-item');
 
-                    // Remove button functionality
-                    orderDiv.querySelector('button').addEventListener('click', function() {
-                        removeOrder(index);
-                    });
+                orderDiv.innerHTML = `
+                    <span>${order.options.join(', ')} -  ₪${order.price}</span>
+                    <button data-index="${index}">הסר</button>
+                `;
+                orderReviewList.appendChild(orderDiv);
 
-                    overallPrice += order.price;
+                // Remove button functionality
+                orderDiv.querySelector('button').addEventListener('click', function() {
+                    removeOrder(index);
                 });
 
-                document.getElementById('overallPrice').textContent = overallPrice;
-            }
-
-            function removeOrder(index) {
-                orders.splice(index, 1);
-                updateOrderReview();
-            }
-
-            function addOrder() {
-                const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
-                const takeOutCheckbox = document.getElementById("TakeOut");
-                const address = document.getElementById('addressTextBox').value;
-                const price = parseInt(document.getElementById('price').textContent, 10);
-
-                // If this is the first order, capture name and phone
-                if (!customerInfo) {
-                    const name = document.getElementById('name').value;
-                    const phone = document.getElementById('phone').value;
-
-                    if (!name || !phone) {
-                        alert("יש למלא שם ומספר טלפון");
-                        return;
-                    }
-
-                    customerInfo = { name, phone };
-
-                    takeOutCheckbox.addEventListener('click', function (event) {
-                        event.preventDefault(); // Prevent the checkbox from changing state
-                    });
-                    document.getElementById('addressTextBox').setAttribute("readonly", true);
-                    document.getElementById('name').setAttribute("readonly", true);
-                    document.getElementById('phone').setAttribute("readonly", true);
-                    document.getElementById('name').textContent = name;
-                    document.getElementById('phone').textContent = phone;
-                }
-
-                if (!options.length) {
-                    alert("יש לבחור לפחות אחת מהתוספות");
-                    return;
-                }
-
-                const order = { ...customerInfo, options, address, price };
-
-                orders.push(order);
-                updateOrderReview();
-
-                const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"]'); // Select all checkboxes inside #orderOptions
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false; // Uncheck each checkbox
-                });
-                document.getElementById('price').textContent = "0"; // Reset total price
-
-                document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
-            }
-
-            function sendOrders() {
-                if (orders.length === 0) {
-                    alert("אין הזמנות לשליחה");
-                    return;
-                }
-
-                var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו OK כדי לשלוח");
-
-                if(!userResponse){
-                    return;
-                }
-
-                orders.forEach(order => {
-                    push(ref(db, "Orders/"), order).catch((error) => {
-                        console.error("Error sending order:", error);
-                    });
-                });
-
-                // Display the preview page with orders
-                const previewOrders = document.getElementById('previewOrders');
-                previewOrders.innerHTML = '';
-                let totalAmount = 0;
-
-                orders.forEach(order => {
-                    const orderDiv = document.createElement('div');
-                    orderDiv.innerHTML = `<p>${order.options.join(', ')} - ₪${order.price}</p>`;
-                    previewOrders.appendChild(orderDiv);
-                    totalAmount += order.price;
-                });
-
-                document.getElementById('previewTotal').textContent = totalAmount;
-
-                // Hide order page and show preview page
-                document.getElementById('order-page').style.display = 'none';
-                document.getElementById('preview-page').style.display = 'block';
-
-                orders = []; // Reset orders after sending
-            }
-
-            document.querySelector('#newOrderBtn').addEventListener('click', () => {
-                // Reload the page to start a new order
-                location.reload();
+                overallPrice += order.price;
             });
 
+            document.getElementById('overallPrice').textContent = overallPrice;
+        }
 
-            loadOrdersPage();
+        function removeOrder(index) {
+            orders.splice(index, 1);
+            updateOrderReview();
+        }
+
+        function addOrder() {
+            const options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+            const price = parseInt(document.getElementById('price').textContent, 10);
+            const address = "";
+
+            // If this is the first order, capture name and phone
+            if (!customerInfo) {
+                const name = document.getElementById('name').value;
+                const phone = document.getElementById('phone').value;
+                if (!name || !phone) {
+                    alert("יש למלא שם ומספר טלפון");
+                    return;
+                }
+
+                customerInfo = { name, phone };
+
+                document.getElementById('name').setAttribute("readonly", true);
+                document.getElementById('phone').setAttribute("readonly", true);
+                document.getElementById('name').textContent = name;
+                document.getElementById('phone').textContent = phone;
+            }
+
+            if (!options.length) {
+                alert("יש לבחור לפחות אחת מהתוספות");
+                return;
+            }
+
+            const order = { ...customerInfo, options, address, price };
+
+            orders.push(order);
+            updateOrderReview();
+
+            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"]'); // Select all checkboxes inside #orderOptions
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false; // Uncheck each checkbox
+            });
+            document.getElementById('price').textContent = "0"; // Reset total price
+
+            document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
+        }
+
+        function addAddressToOrders(address){
+            orders.forEach((order, index) => {
+                order.address = address;
+            });
+        }
+        function sendOrders() {
+
+            if (orders.length === 0) {
+                alert("אין הזמנות לשליחה");
+                return;
+            }
+
+            if(shippingCheckbox.checked){
+                const address = document.getElementById('addressTextBox').value;
+                if(address.length == 0){
+                    alert("בחרת משלוח, נא למלא כתובת");
+                    return;
+                }
+                addAddressToOrders(address);
+
+            }
+            var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו OK כדי לשלוח");
+
+            if(!userResponse){
+                return;
+            }
+
+            orders.forEach(order => {
+                push(ref(db, "Orders/"), order).catch((error) => {
+                    console.error("Error sending order:", error);
+                });
+            });
+
+            // Display the preview page with orders
+            const previewOrders = document.getElementById('previewOrders');
+            previewOrders.innerHTML = '';
+            let totalAmount = 0;
+
+            orders.forEach(order => {
+                const orderDiv = document.createElement('div');
+                orderDiv.innerHTML = `<p>${order.options.join(', ')} - ₪${order.price}</p>`;
+                previewOrders.appendChild(orderDiv);
+                totalAmount += order.price;
+            });
+            var shippingFee = document.getElementById('shippingFee').value;
+            shippingFee = document.getElementById('shippingFee').textContent
+            document.getElementById('shippingFeePreview').textContent = shippingFee;
+            document.getElementById('previewTotal').textContent = totalAmount + parseInt(shippingFee,10);
+
+            // Hide order page and show preview page
+            document.getElementById('order-page').style.display = 'none';
+            document.getElementById('preview-page').style.display = 'block';
+
+            orders = []; // Reset orders after sending
+        }
+
+        document.querySelector('#newOrderBtn').addEventListener('click', () => {
+            // Reload the page to start a new order
+            location.reload();
         });
+
+
     </script>
 </body>
 </html>
