@@ -204,6 +204,37 @@
             background-color: #ddd;
         }
 
+          .background-container {
+            position: relative;
+            min-height: 100vh; /* Full viewport height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: rgb(0, 0, 0);
+            font-size: 2rem;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevents pseudo-element overflow */
+        }
+
+        .background-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('logo.jpg'); /* Replace with your image link */
+            background-size: contain; /* Ensure the image covers the screen */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents tiling */
+            opacity: 0.4; /* Transparency level */
+            z-index: -1; /* Ensures the background stays behind the text */
+        }
+        .background-container span {
+            z-index: 1;
+        }
+
         /* Optional: Add more distinct hover style for checked state */
         .checkbox-btn input[type="checkbox"]:checked:hover {
             background-color: #45a049;  /* Slightly darker green on hover */
@@ -307,8 +338,9 @@
         </form>
     </div>
     
-    <div id="closed-page" style="display: none;">
-        <h2>החנות סגורה</h2>
+    <div class="background-container" id="closed-page" style="display: none;">
+        <h2>הדוכן סגור</h2>
+        <h3>שעות פתיחה: ימי שלישי, 18:30-21:00</h3>
     </div>
 
     <script type="module">
