@@ -307,6 +307,10 @@
                 <input type="checkbox" id="zeroCheckBox" name="zero" value="זירו" data-price="5"><span> פחית זירו (5₪)</span>
             </label>
 
+            <label></label>
+            <input type="tel" id="dishComments" name="dishComments" placeholder="הערות/שם לזיהוי מנה" maxlength="25" required dir="rtl">
+            <label></label>
+
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
 
             <button id="addOrderBtn" type="button">הוסף הזמנה</button>
@@ -330,6 +334,8 @@
         <form>
             <img src="logo.jpg" alt="Logo" id="logo"/>
             <h2>ההזמנה נשלחה!</h2>
+            <p><strong>שם:</strong> <span id="namePreview">0</span></p>
+            <p><strong>נייד:</strong> <span id="phonePreview">0</span></p>
             <div id="previewOrders"></div>
 
             <p><strong>משלוח:</strong> <span id="shippingFeePreview">0</span></p>
@@ -446,31 +452,10 @@
             const orderReviewList = document.getElementById("orderReviewList");
             orderReviewList.innerHTML = '';
             let overallPrice = 0;
-
+            let orderNumber = 1;
             orders.forEach((order, index) => {
-                const orderDiv = document.createElement('div');
-                orderDiv.classList.add('order-item');
-
-                orderDiv.innerHTML = `
-                    <div class="order-content">
-                        <span class="order-text">
-                            ${order.options.join(', ')}<br>
-                            ${order.additions}<br>
-                            ${order.drinks}<br>
-                            ₪${order.price}
-                        </span>
-                        <button class="order-button" data-index="${index}">הסר</button>
-                    </div>
-                `;
-
-                orderReviewList.appendChild(orderDiv);
-
-                // Remove button functionality
-                orderDiv.querySelector('button').addEventListener('click', function() {
-                    removeOrder(index);
-                });
-
-                overallPrice += order.price;
+                overallPrice += buildOrderView(order, orderReviewList, true, index, orderNumber);
+                orderNumber++;
             });
 
             document.getElementById('overallPrice').textContent = overallPrice;
@@ -487,7 +472,6 @@
         var zeroCheckBox = document.getElementById('zeroCheckBox')
 
         
-        let customerInfo = null; // Store customer name and phone
         function addOrder() {
             var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
             const price = parseInt(document.getElementById('price').textContent, 10);
@@ -495,25 +479,13 @@
             const coke = cokeCheckBox.checked ? cokeCheckBox.value : "";
             const zero = zeroCheckBox.checked ? zeroCheckBox.value : "";
             const address = "";
+            const name = "";
+            const phone = "";
+            var dishCommentsTmp = document.getElementById('dishComments').value;
+            const dishComments = dishCommentsTmp ? dishCommentsTmp : "";
             const drinks = [cokeCheckBox.checked ? cokeCheckBox.value : "", zeroCheckBox.checked ? zeroCheckBox.value : ""]
                 .filter(Boolean)
                 .join(",");
-            // If this is the first order, capture name and phone
-            if (!customerInfo) {
-                const name = document.getElementById('name').value;
-                const phone = document.getElementById('phone').value;
-                if (!name || !phone) {
-                    alert("יש למלא שם ומספר טלפון");
-                    return;
-                }
-
-                customerInfo = { name, phone };
-
-                document.getElementById('name').setAttribute("readonly", true);
-                document.getElementById('phone').setAttribute("readonly", true);
-                document.getElementById('name').textContent = name;
-                document.getElementById('phone').textContent = phone;
-            }
 
             if (!ShawarmaCheckBox.checked && !friesCheckBox.checked && !cokeCheckBox.checked && !zeroCheckBox.checked) {
                 alert("לא נבחרה מנה");
@@ -528,7 +500,7 @@
                 options = [""];
             }
 
-            const order = { ...customerInfo, options, additions, drinks, address, price };
+            const order = {name, phone , options, additions, drinks, address, dishComments, price };
 
             orders.push(order);
             updateOrderReview();
@@ -537,16 +509,102 @@
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false; // Uncheck each checkbox
             });
+            document.getElementById('dishComments').value = "";
             document.getElementById('price').textContent = "0"; // Reset total price
             document.getElementById('orderOptions').style.display = 'none';
             document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
         }
 
-        function addAddressToOrders(address){
+        function addConstantFieldsToOrders(){
+
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            var address = "";
+            if (!name || !phone) {
+                    alert("יש למלא שם ומספר טלפון");
+                    return false;
+                }
+
+            if(shippingCheckbox.checked){
+                address = document.getElementById('addressTextBox').value;
+                if(address.length == 0){
+                    alert("בחרת משלוח, נא למלא כתובת");
+                    return false;
+                }
+
+            }
             orders.forEach((order, index) => {
                 order.address = address;
+                order.name = name;
+                order.phone = phone;
             });
+
+            return true;
         }
+
+        function buildOrderView(order, parentElement, addRemoveButton, indexToRemove, orderNumber){
+            const orderDiv = document.createElement('div');
+            const orderDetails = [];
+            // Add the dish number
+            if(orderNumber){
+                orderDetails.push(`מנה ${orderNumber}:`);
+            }
+
+            // Add options with prefix if not empty
+            if (order.options && order.options.length > 0 && order.options[0].trim() !== '') {
+                orderDetails.push(`שווארמה עם: ${order.options.join(', ')}`);
+            }
+
+            // Add additions if not empty
+            if (order.additions && order.additions.trim() !== '') {
+                orderDetails.push(order.additions);
+            }
+
+            // Add drinks if not empty
+            if (order.drinks && order.drinks.trim() !== '') {
+                orderDetails.push(order.drinks);
+            }
+
+            if (order.dishComments && order.dishComments.trim() !== '') {
+                orderDetails.push(`הערות: (${order.dishComments})`);
+            }
+
+            // Add price if valid
+            if (order.price && !isNaN(order.price)) {
+                orderDetails.push(`<strong>מחיר: ₪${order.price}</strong>`);
+            }
+
+            if(addRemoveButton){
+                // Create and add a button to the order
+                const button = document.createElement('button');
+                button.classList.add('order-button');
+                button.textContent = 'הסר';
+                button.onclick = () =>  function () {
+                    removeOrder(indexToRemove);
+                };
+                orderDiv.appendChild(button);
+            }
+
+            // Set the inner HTML for the order
+            orderDiv.innerHTML = `<span class="order-text">
+                                    ${orderDetails.join('<br>')}
+                                </span>`;
+            parentElement.appendChild(orderDiv);
+
+            // Add a blank line between orders
+            const spacerDiv = document.createElement('div');
+            spacerDiv.style.height = '10px'; // Adjust the height as needed
+            parentElement.appendChild(spacerDiv);
+
+            // Update total amount if price is valid
+            if (!isNaN(order.price)) {
+                return order.price;
+            }
+
+            return 0;
+        }
+
+
         function sendOrders() {
 
             if (orders.length === 0) {
@@ -554,15 +612,10 @@
                 return;
             }
 
-            if(shippingCheckbox.checked){
-                const address = document.getElementById('addressTextBox').value;
-                if(address.length == 0){
-                    alert("בחרת משלוח, נא למלא כתובת");
-                    return;
-                }
-                addAddressToOrders(address);
-
+            if(!addConstantFieldsToOrders()){
+                return;
             }
+
             var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו OK כדי לשלוח");
 
             if(!userResponse){
@@ -580,21 +633,20 @@
             previewOrders.innerHTML = '';
             let totalAmount = 0;
 
+            let dishNumber = 1; // Initialize the dish number
+
             orders.forEach(order => {
-                const orderDiv = document.createElement('div');
-                orderDiv.innerHTML = ` <span class="order-text">
-                                            ${order.options.join(', ')}<br>
-                                            ${order.additions}<br>
-                                            ${order.drinks}<br>
-                                            ₪${order.price}
-                                        </span>`;
-                previewOrders.appendChild(orderDiv);
-                totalAmount += order.price;
+                totalAmount += buildOrderView(order,previewOrders, dishNumber);
+                dishNumber++; // Increment the dish number
+       
             });
+
             var shippingFee = document.getElementById('shippingFee').value;
             shippingFee = document.getElementById('shippingFee').textContent
             document.getElementById('shippingFeePreview').textContent = shippingFee;
             document.getElementById('previewTotal').textContent = totalAmount + parseInt(shippingFee,10);
+            document.getElementById('namePreview').textContent = document.getElementById('name').value;
+            document.getElementById('phonePreview').textContent = document.getElementById('phone').value;
 
             // Hide order page and show preview page
             document.getElementById('order-page').style.display = 'none';
