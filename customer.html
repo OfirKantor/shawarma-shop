@@ -116,7 +116,6 @@
             max-width: calc(100% - 100px); /* Ensures text doesn’t overlap the button */
             word-wrap: break-word; /* Ensures text breaks onto the next line if necessary */
         }
-
         .order-button {
             position: absolute; /* Fixes the button's position */
             left: 0; /* Aligns the button to the right edge */
@@ -200,9 +199,32 @@
             color: rgb(8, 39, 216);               /* White text */
         }
 
+       /* Hide the default radio button */
+        .radio-btn input[type="radio"] {
+            display: none;
+        }
 
-        /* Add a hover effect to the label */
-        .checkbox-btn2:hover {
+        /* Base style for labels */
+        .radio-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Change label style when the associated radio button is checked */
+        .radio-btn input[type="radio"]:checked + span {
+            color: rgb(8, 39, 216);                   /* White text */
+        }
+
+        /* Hover effect for the label */
+        .radio-btn:hover {
             background-color: #ddd;
         }
 
@@ -247,9 +269,9 @@
 </head>
 <body>
     <div id="order-page" class="container" style="display: none;">
-        <h2>מה תרצו להזמין?</h2>
         <form id="orderForm">
             <img src="logo.jpg" alt="Logo" id="logo"/>
+            <h2>ברוכים הבאים לגלגל!</h2>
 
             <input type="text" id="name" name="name" placeholder="שם" maxlength="25" required dir="rtl">
 
@@ -257,9 +279,33 @@
             <input type="tel" id="phone" name="phone" placeholder="מספר נייד" maxlength="10" required dir="rtl">
             <label></label>
 
-            <label class="checkbox-btn2">
-                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"><span> פיתה שווארמה (35₪)</span>
+            <label>
+                <input type="checkbox" id="shipping" value="משלוח" data-price="10"> משלוח (₪10)
+                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="30" required readonly>
+    
             </label>
+
+            <p><strong>איך תשלמו?</strong></p>
+
+            <div id="paymentMethod" class="radio-group">
+                <label class="radio-btn">
+                    <input type="radio" name="paymentOption" value="מזומן"> <span>מזומן</span>
+                </label>
+                <label class="radio-btn">
+                    <input type="radio" name="paymentOption" value="Bit"> <span>Bit</span>
+                </label>
+                <label class="radio-btn">
+                    <input type="radio" name="paymentOption" value="Paybox"> <span>Paybox</span>
+                </label>
+            </div>
+
+
+            <p><strong>מה תרצו להזמין?</strong></p>
+
+            <label class="checkbox-btn2">
+                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"><span> שווארמה בפיתה (35₪)</span>
+            </label>
+
 
             <div id="orderOptions" class="checkbox-group" style="display: none;">
                 <label class="checkbox-btn">
@@ -321,11 +367,6 @@
         <div id="orderReviewSection" class="order-review" style="display: none;">
             <h3>סיכום הזמנה</h3>
             <div id="orderReviewList"></div>
-            <label>
-                <input type="checkbox" id="shipping" value="משלוח" data-price="10"> משלוח (₪10)
-                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="30" required readonly>
-    
-            </label>
             <p><strong>משלוח:</strong> <span id="shippingFee">0</span></p>
             <p><strong>מחיר כולל:</strong> <span id="overallPrice">0</span></p>
             <button id="sendOrderBtn" type="button" class="send-button">שלח הזמנות</button>
@@ -339,6 +380,8 @@
             <p><strong>שם:</strong> <span id="namePreview">0</span></p>
             <p><strong>נייד:</strong> <span id="phonePreview">0</span></p>
             <div id="previewOrders"></div>
+
+            <p><strong>שיטת תשלום:</strong> <span id="paymentMethodPreview"></span></p>
 
             <p><strong>משלוח:</strong> <span id="shippingFeePreview">0</span></p>
             <p><strong>סכום כולל:</strong> ₪<span id="previewTotal"></span></p>
@@ -483,6 +526,7 @@
             const address = "";
             const name = "";
             const phone = "";
+            const paymentMethod = "";
             var dishCommentsTmp = document.getElementById('dishComments').value;
             const dishComments = dishCommentsTmp ? dishCommentsTmp : "";
             const drinks = [cokeCheckBox.checked ? cokeCheckBox.value : "", zeroCheckBox.checked ? zeroCheckBox.value : ""]
@@ -495,14 +539,18 @@
             }
 
             if (ShawarmaCheckBox.checked && !options.length) {
-                alert("לא נבחרו תוספות לשווארמה");
-                return;
+                var userResponse = confirm("לא נבחרו תוספות לשווארמה. תרצו רק פיתה עם בשר? (זה בסדר, אנחנו לא שופטים :) )");
+                if(!userResponse){
+                    return;
+                }
+                options = ["פיתה עם בשר, אנשים מוזרים... (סליחה ששפטנו)"];
             }
+
             if(!ShawarmaCheckBox.checked){
                 options = [""];
             }
 
-            const order = {name, phone , options, additions, drinks, address, dishComments, price };
+            const order = {name, phone , options, additions, drinks, address, dishComments, price, paymentMethod };
 
             orders.push(order);
             updateOrderReview();
@@ -521,12 +569,24 @@
 
             const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
+            const paymentMethod = document.querySelector('input[name="paymentOption"]:checked')?.value;
+
+            // Log the method (or handle the case where no button is selected)
+            if (!paymentMethod) {
+                alert("יש לבחור שיטת תשלום");
+                return false;
+            } 
+
             var address = "";
             if (!name || !phone) {
                     alert("יש למלא שם ומספר טלפון");
                     return false;
-                }
+            }
 
+            if(phone.length != 10){
+                alert("מספר נייד שגוי. נא להכניס מספר בן 10 ספרות");
+                return false;
+            }
             if(shippingCheckbox.checked){
                 address = document.getElementById('addressTextBox').value;
                 if(address.length == 0){
@@ -539,6 +599,7 @@
                 order.address = address;
                 order.name = name;
                 order.phone = phone;
+                order.paymentMethod = paymentMethod;
             });
 
             return true;
@@ -594,8 +655,6 @@
                                 </span>`;
             }
 
-            // Set the inner HTML for the order
-           
             parentElement.appendChild(orderDiv);
 
             // Add a blank line between orders
@@ -653,7 +712,34 @@
             document.getElementById('shippingFeePreview').textContent = shippingFee;
             document.getElementById('previewTotal').textContent = totalAmount + parseInt(shippingFee,10);
             document.getElementById('namePreview').textContent = document.getElementById('name').value;
-            document.getElementById('phonePreview').textContent = document.getElementById('phone').value;
+
+            let paymentMethod = document.querySelector('input[name="paymentOption"]:checked')?.value;
+            let paymentComment = " (מסירת ההזמנה מותנית ב";
+            if(shippingCheckbox.checked){
+                if(paymentMethod == "מזומן"){
+                    paymentComment += "תשלום לשליח)"
+                }
+                else{
+                    paymentComment += "הצגת אישור תשלום לשליח)"
+                }
+            }
+            else{
+                if(paymentMethod == "מזומן"){
+                    paymentComment += "תשלום בדוכן)"
+                }
+                else{
+                    paymentComment += "הצגת אישור תשלום בדוכן)"
+                }
+            }
+            
+            document.getElementById('paymentMethodPreview').textContent = paymentMethod + paymentComment;
+            document.getElementById('paymentMethodPreview').style.color = "blue";
+
+            
+
+            // Log the method (or handle the case where no button is selected)
+            
+
 
             // Hide order page and show preview page
             document.getElementById('order-page').style.display = 'none';
