@@ -712,6 +712,7 @@
             document.getElementById('shippingFeePreview').textContent = shippingFee;
             document.getElementById('previewTotal').textContent = totalAmount + parseInt(shippingFee,10);
             document.getElementById('namePreview').textContent = document.getElementById('name').value;
+            document.getElementById('phonePreview').textContent = document.getElementById('phone').value;
 
             let paymentMethod = document.querySelector('input[name="paymentOption"]:checked')?.value;
             let paymentComment = " (מסירת ההזמנה מותנית ב";
