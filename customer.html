@@ -264,7 +264,11 @@
             background-color: #45a049;  /* Slightly darker green on hover */
         }
 
-
+        h2 {
+            font-size: 22px;
+            margin: 0;
+        }
+        
     </style>
 </head>
 <body>
@@ -502,7 +506,9 @@
                 overallPrice += buildOrderView(order, orderReviewList, orderNumber,  true, index);
                 orderNumber++;
             });
-
+            if(shippingCheckbox.checked){
+                overallPrice += parseInt(shippingCheckbox.dataset.price, 10);
+            }
             document.getElementById('overallPrice').textContent = overallPrice;
         }
 
