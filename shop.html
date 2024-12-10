@@ -115,6 +115,7 @@
         }
     </style>
 </head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <body>
 
     <div id="customer-orders-page" class="container">
@@ -175,6 +176,7 @@
     </div>
 
     <div id="close-day-floating-buttons" class="floating-buttons" style="display: none;">
+        <button id="exportToExcelBtn" type="button" style="background-color: green">ייצא לאקסל</button>
         <button id="clearPrevOrdersBtn" type="button" style="background-color: red">נקה הכל</button>
         <button id="backBtn" type="button" style="background-color: black">חזור</button>
     </div>
@@ -415,6 +417,45 @@
                 });
         }
 
+        function exportTableToExcel(filename) {
+            // Get the table element
+            const table = document.getElementById("previousOrdersTable");
+
+            // Create a workbook and a worksheet
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.table_to_sheet(table);
+
+            // Add two rows directly under the table
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const lastRow = range.e.r + 1; // Next row index
+
+            const overallIncome = parseInt(document.getElementById("totalPrice").textContent, 10);
+            const totalShippingIncome = parseInt(document.getElementById("totalShipmentsIncome").textContent, 10);
+
+            ws[XLSX.utils.encode_cell({ r: lastRow, c: 0 })] = { t: "s", v: "סהכ:" }; // First column
+            ws[XLSX.utils.encode_cell({ r: lastRow, c: 1 })] = { t: "n", v: overallIncome };    // Second column
+
+            // Add the second row ("sum2:", 24)
+            ws[XLSX.utils.encode_cell({ r: lastRow + 1, c: 0 })] = { t: "s", v: "סהכ משלוחים:" }; // First column
+            ws[XLSX.utils.encode_cell({ r: lastRow + 1, c: 1 })] = { t: "n", v: totalShippingIncome };     // Second column
+
+            // Update the range to include new rows
+            range.e.r += 2;
+            ws['!ref'] = XLSX.utils.encode_range(range);
+
+            // Append worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+            // Export the workbook to a file
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Attach the export function to a button
+        document.getElementById("exportToExcelBtn").addEventListener("click", () => {
+            const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const filename = `סגירת יום-${today}.xlsx`; // Filename with today's date
+            exportTableToExcel(filename);
+        });
 
 
         document.getElementById('customer-orders-page').style.display = 'block';
