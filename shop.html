@@ -170,6 +170,8 @@
             </tbody>
         </table>
         <p><strong>סך הכל:</strong> <span id="totalPrice">0</span></p>
+        <p><strong>סך הכל משלוחים:</strong> <span id="totalShipmentsIncome">0</span></p>
+
     </div>
 
     <div id="close-day-floating-buttons" class="floating-buttons" style="display: none;">
@@ -376,9 +378,13 @@
                         previousOrdersTable.innerHTML = "";
                         const data = snapshot.val();
                         let OverallIncome = 0;
+                        let shippingSet = new Set();
                         Object.entries(data).forEach(([id, order]) => {
                             const row = document.createElement("tr");
-
+                            if(order.address.trim() !== ''){
+                                let shippingItemString = order.address + '.' + order.name + '.' + order.phone;
+                                shippingSet.add(shippingItemString);
+                            }
                             row.innerHTML = `
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
@@ -394,7 +400,11 @@
                             OverallIncome += order.price;
                             previousOrdersTable.appendChild(row);
                         });
+                        const shippingPrice = 5;
+                        const totalShippingIncome = (shippingPrice * shippingSet.size)
                         document.getElementById('totalPrice').textContent = OverallIncome;
+                        document.getElementById('totalShipmentsIncome').textContent = totalShippingIncome;
+
                     } else {
                         previousOrdersTable.innerHTML = "";
                     }
