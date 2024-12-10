@@ -126,6 +126,8 @@
             text-align: center;
             padding: 5px;
             box-sizing: border-box; /* Ensures padding doesn’t affect size */
+            background-color: rgb(204, 29, 29); /* Sets the button color to red */
+            color: white; /* Ensures text is readable on a red background */
         }
         #order-page {
             position: relative;
@@ -454,7 +456,7 @@
             let overallPrice = 0;
             let orderNumber = 1;
             orders.forEach((order, index) => {
-                overallPrice += buildOrderView(order, orderReviewList, true, index, orderNumber);
+                overallPrice += buildOrderView(order, orderReviewList, orderNumber,  true, index);
                 orderNumber++;
             });
 
@@ -542,7 +544,7 @@
             return true;
         }
 
-        function buildOrderView(order, parentElement, addRemoveButton, indexToRemove, orderNumber){
+        function buildOrderView(order, parentElement,orderNumber, addRemoveButton, indexToRemove){
             const orderDiv = document.createElement('div');
             const orderDetails = [];
             // Add the dish number
@@ -552,7 +554,7 @@
 
             // Add options with prefix if not empty
             if (order.options && order.options.length > 0 && order.options[0].trim() !== '') {
-                orderDetails.push(`שווארמה עם: ${order.options.join(', ')}`);
+                orderDetails.push(`שווארמה בפיתה עם: ${order.options.join(', ')}`);
             }
 
             // Add additions if not empty
@@ -576,19 +578,24 @@
 
             if(addRemoveButton){
                 // Create and add a button to the order
-                const button = document.createElement('button');
-                button.classList.add('order-button');
-                button.textContent = 'הסר';
-                button.onclick = () =>  function () {
+                orderDiv.innerHTML = `<div class="order-content">
+                                      <span class="order-text">
+                                      ${orderDetails.join('<br>')}
+                                      </span>
+                                      <button class="order-button" data-index="${indexToRemove}">הסר</button>
+                                                          </div>`;
+                orderDiv.querySelector('button').addEventListener('click', function() {
                     removeOrder(indexToRemove);
-                };
-                orderDiv.appendChild(button);
+                });
+            }
+            else{
+                orderDiv.innerHTML = `<span class="order-text">
+                                    ${orderDetails.join('<br>')}
+                                </span>`;
             }
 
             // Set the inner HTML for the order
-            orderDiv.innerHTML = `<span class="order-text">
-                                    ${orderDetails.join('<br>')}
-                                </span>`;
+           
             parentElement.appendChild(orderDiv);
 
             // Add a blank line between orders
