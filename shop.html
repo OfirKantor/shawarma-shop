@@ -130,6 +130,7 @@
                     <th>כתובת למשלוח</th>
                     <th>הערות למנה</th>
                     <th>מחיר</th>
+                    <th>שיטת תשלום</th>
                 </tr>
             </thead>
             <tbody>
@@ -160,6 +161,8 @@
                     <th>כתובת למשלוח</th>
                     <th>הערות למנה</th>
                     <th>מחיר</th>
+                    <th>שיטת תשלום</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -351,6 +354,7 @@
                                 <td>${order.address}</td>
                                 <td>${order.dishComments}</td>
                                 <td>${order.price || "N/A"}</td>
+                                <td>${order.paymentMethod}</td>
                             `;
                             ordersTable.appendChild(row);
                         });
@@ -384,6 +388,8 @@
                                 <td>${order.address}</td>
                                 <td>${order.dishComments}</td>
                                 <td>${order.price || "N/A"}</td>
+                                <td>${order.paymentMethod}</td>
+
                             `;
                             OverallIncome += order.price;
                             previousOrdersTable.appendChild(row);
