@@ -268,13 +268,38 @@
             font-size: 22px;
             margin: 0;
         }
+
+        #logo {
+            position: absolute;
+            top: 10px; /* Adjust spacing from the top */
+            left: 10px; /* Adjust spacing from the left */
+            max-width: 80px; /* Set a maximum width for the logo */
+            z-index: 10; /* Ensure it stays on top of other elements */
+        }
+
+        /* Prevent overlap with other content */
+        #orderForm {
+            margin-top: 100px; /* Push content below the logo */
+            position: relative; /* Ensure it respects the logo's absolute position */
+        }
+
+        /* Additional styling for responsiveness */
+        @media (max-width: 600px) {
+            #logo {
+                max-width: 80px; /* Adjust logo size for smaller screens */
+            }
+            #orderForm {
+                margin-top: 100px; /* Adjust margin for smaller screens */
+            }
+        }
         
     </style>
 </head>
 <body>
     <div id="order-page" class="container" style="display: none;">
+        <img src="logo.jpg" alt="Logo" id="logo"/>
+
         <form id="orderForm">
-            <img src="logo.jpg" alt="Logo" id="logo"/>
             <h2>ברוכים הבאים לגלגל!</h2>
 
             <input type="text" id="name" name="name" placeholder="שם" maxlength="25" required dir="rtl">
@@ -365,7 +390,7 @@
 
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
 
-            <button id="addOrderBtn" type="button">הוסף הזמנה</button>
+            <button id="addOrderBtn" type="button">הוסף להזמנה</button>
         </form>
 
         <div id="orderReviewSection" class="order-review" style="display: none;">
@@ -378,11 +403,12 @@
     </div>
 
     <div id="preview-page" class="container" style="display: none;">
+        <img src="logo.jpg" alt="Logo" id="logo"/>
         <form>
-            <img src="logo.jpg" alt="Logo" id="logo"/>
             <h2>ההזמנה נשלחה!</h2>
-            <p><strong>שם:</strong> <span id="namePreview">0</span></p>
-            <p><strong>נייד:</strong> <span id="phonePreview">0</span></p>
+            <p><strong>שם:</strong> <span id="namePreview"></span></p>
+            <p><strong>נייד:</strong> <span id="phonePreview"></span></p>
+            <p><strong></strong> <span id="shippingAddressPreview"></span></p>
             <div id="previewOrders"></div>
 
             <p><strong>שיטת תשלום:</strong> <span id="paymentMethodPreview"></span></p>
@@ -688,7 +714,7 @@
                 return;
             }
 
-            var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) לחצו OK כדי לשלוח");
+            var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) להמשיך?");
 
             if(!userResponse){
                 return;
@@ -712,17 +738,20 @@
                 dishNumber++; // Increment the dish number
        
             });
-
+            let shipping = shippingCheckbox.checked;
             var shippingFee = document.getElementById('shippingFee').value;
             shippingFee = document.getElementById('shippingFee').textContent
             document.getElementById('shippingFeePreview').textContent = shippingFee;
             document.getElementById('previewTotal').textContent = totalAmount + parseInt(shippingFee,10);
             document.getElementById('namePreview').textContent = document.getElementById('name').value;
             document.getElementById('phonePreview').textContent = document.getElementById('phone').value;
+            if(shipping){
+                document.getElementById('shippingAddressPreview').textContent = "משלוח ל: " + document.getElementById('addressTextBox').value;
+            }
 
             let paymentMethod = document.querySelector('input[name="paymentOption"]:checked')?.value;
             let paymentComment = " (מסירת ההזמנה מותנית ב";
-            if(shippingCheckbox.checked){
+            if(shipping){
                 if(paymentMethod == "מזומן"){
                     paymentComment += "תשלום לשליח)"
                 }
