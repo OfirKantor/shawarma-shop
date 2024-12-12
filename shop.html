@@ -120,6 +120,7 @@
 
     <div id="customer-orders-page" class="container">
         <h2>הזמנות</h2>
+        <button id="clearDbBtn" type="button">נקה הזמנות</button>
         <table id="ordersTable">
             <thead>
                 <tr>
@@ -140,7 +141,6 @@
         </table>
 
         <div style="text-align: center;">
-            <button id="clearDbBtn" type="button">נקה הזמנות</button>
         </div>
     </div>
 
@@ -345,6 +345,17 @@
                                     markedRows.set(id, order);
                                     row.classList.add("marked");
                                 }
+                            });
+
+                            row.addEventListener("dblclick", function () {
+                                if (markedRows.has(id)) {
+                                    markedRows.delete(id);
+                                }
+
+                                set(ref(db, `Orders/${id}`), null);
+                                set(ref(db, `PreviousOrders/${id}`), order);
+                                
+                                loadOrders();;
                             });
 
                             if (markedRows.has(id)) row.classList.add("marked");
