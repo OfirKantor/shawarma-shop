@@ -302,7 +302,7 @@
         <form id="orderForm">
             <h2>ברוכים הבאים לגלגל!</h2>
 
-            <input type="text" id="name" name="name" placeholder="שם" maxlength="25" required dir="rtl">
+            <input type="text" id="name" name="name" placeholder="שם ושם משפחה" maxlength="25" required dir="rtl">
 
             <label></label>
             <input type="tel" id="phone" name="phone" placeholder="מספר נייד" maxlength="10" required dir="rtl">
@@ -310,7 +310,7 @@
 
             <label>
                 <input type="checkbox" id="shipping" value="משלוח" data-price="5"> משלוח (₪5)
-                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="30" required readonly>
+                <input type="text" id="addressTextBox" name="addressTextBox" placeholder="כתובת למשלוח" maxlength="35" required readonly>
     
             </label>
 
@@ -330,6 +330,8 @@
 
 
             <p><strong>מה תרצו להזמין?</strong></p>
+            <!-- <h5 style="color: blue;">ארוחה (שווארמה, צ'יפס ושתיה) ב₪45 במקום ₪50</h5> -->
+
 
             <label class="checkbox-btn2">
                 <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"><span> שווארמה בפיתה (35₪)</span>
@@ -344,6 +346,9 @@
                     <input type="checkbox" name="options" value="חריף"> <span>חריף</span>
                 </label>
                 <label class="checkbox-btn">
+                    <input type="checkbox" name="options" value="חריף מאוד"> <span>חריף מאוד</span>
+                </label>
+                <label class="checkbox-btn">
                     <input type="checkbox" name="options" value="מלפפון"> <span>מלפפון</span>
                 </label>
                 <label class="checkbox-btn">
@@ -351,9 +356,6 @@
                 </label>
                 <label class="checkbox-btn">
                     <input type="checkbox" name="options" value="כרוב לבן"> <span>כרוב לבן</span>
-                </label>
-                <label class="checkbox-btn">
-                    <input type="checkbox" name="options" value="כרוב סגול"> <span>כרוב סגול</span>
                 </label>
                 <label class="checkbox-btn">
                     <input type="checkbox" name="options" value="בצל עם סומק"> <span>בצל עם סומק</span>
@@ -390,7 +392,7 @@
 
             <p><strong> מחיר מנה:</strong> <span id="price">0</span></p>
 
-            <button id="addOrderBtn" type="button">הוסף להזמנה</button>
+            <button id="addOrderBtn" type="button">הוסף לסיכום הזמנה</button>
         </form>
 
         <div id="orderReviewSection" class="order-review" style="display: none;">
@@ -451,13 +453,12 @@
         import { getDatabase, push, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
-            authDomain: "test-655b0.firebaseapp.com",
-            databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
-            projectId: "test-655b0",
-            storageBucket: "test-655b0.firebasestorage.app",
-            messagingSenderId: "948260428804",
-            appId: "1:948260428804:web:78f1ea2db14800c5b42951"
+            apiKey: "AIzaSyCBZL_9FOWgUWdhX61F-etff_PVrO45wXI",
+            authDomain: "shawarma-tests-e0de6.firebaseapp.com",
+            projectId: "shawarma-tests-e0de6",
+            storageBucket: "shawarma-tests-e0de6.firebasestorage.app",
+            messagingSenderId: "344905791041",
+            appId: "1:344905791041:web:cb8f996195762cc10af8c0"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -521,6 +522,18 @@
                 return total + parseInt(option.dataset.price, 10);
             }, 0);
 
+            // full meal discount
+            const isShawarmaChecked = document.querySelector('input[name="Shawarma"]').checked;
+            const isFriesChecked = document.querySelector('input[name="fries"]').checked;
+            const isCokeChecked = document.querySelector('input[name="coke"]').checked;
+            const isZeroChecked = document.querySelector('input[name="zero"]').checked;
+
+            const discount = 0;
+        
+            if (isShawarmaChecked && isFriesChecked && (isCokeChecked || isZeroChecked)) {
+                price -= discount;
+            }
+
             document.getElementById('price').textContent = price;
         }
 
@@ -549,7 +562,7 @@
         var cokeCheckBox = document.getElementById('cokeCheckBox')
         var zeroCheckBox = document.getElementById('zeroCheckBox')
 
-        
+        let stopHafira = false;
         function addOrder() {
             var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
             const price = parseInt(document.getElementById('price').textContent, 10);
@@ -596,6 +609,11 @@
             document.getElementById('price').textContent = "0"; // Reset total price
             document.getElementById('orderOptions').style.display = 'none';
             document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
+
+            if(!stopHafira){
+                alert("לשליחת ההזמנה לדוכן יש ללחוץ על כפתור 'שלח הזמנות' בתחתית העמוד. ניתן לצרף מנות נוספות לפני השליחה לצורך הזמנה מרוכזת");
+                stopHafira = true;
+            }
         }
 
         function addConstantFieldsToOrders(){
@@ -616,10 +634,20 @@
                     return false;
             }
 
-            if(phone.length != 10){
-                alert("מספר נייד שגוי. נא להכניס מספר בן 10 ספרות");
+            const isValidName = /^[\u0590-\u05FF]+(?:\s+[\u0590-\u05FF]+)+\s*$/.test(name);
+
+            if(!isValidName){
+                alert("יש למלא שם וגם שם משפחה")
                 return false;
             }
+            // validate phone number
+            const isValidPhoneNumber = /^[0-9]{10}$/.test(phone);
+
+            if (!isValidPhoneNumber) {
+                alert("מספר נייד שגוי. נא להכניס מספר נייד תקני");
+                return false;
+            }
+         
             if(shippingCheckbox.checked){
                 address = document.getElementById('addressTextBox').value;
                 if(address.length == 0){
@@ -712,12 +740,6 @@
             }
 
             if(!addConstantFieldsToOrders()){
-                return;
-            }
-
-            var userResponse = confirm("הזדמנות אחרונה לעבור על ההזמנה :) להמשיך?");
-
-            if(!userResponse){
                 return;
             }
 

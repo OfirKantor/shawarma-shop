@@ -186,13 +186,12 @@
         import { getDatabase, get, ref, set } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyDloIOJSWp_5lVtoNBIE5XrdTJgbCpNGjo",
-            authDomain: "test-655b0.firebaseapp.com",
-            databaseURL: "https://test-655b0-default-rtdb.firebaseio.com",
-            projectId: "test-655b0",
-            storageBucket: "test-655b0.firebasestorage.app",
-            messagingSenderId: "948260428804",
-            appId: "1:948260428804:web:78f1ea2db14800c5b42951"
+            apiKey: "AIzaSyCBZL_9FOWgUWdhX61F-etff_PVrO45wXI",
+            authDomain: "shawarma-tests-e0de6.firebaseapp.com",
+            projectId: "shawarma-tests-e0de6",
+            storageBucket: "shawarma-tests-e0de6.firebasestorage.app",
+            messagingSenderId: "344905791041",
+            appId: "1:344905791041:web:cb8f996195762cc10af8c0"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -232,8 +231,10 @@
                     options: options,
                     additions: cells[3]?.textContent || "",
                     drinks: cells[4]?.textContent || "",
-                    address: cells[5]?.textContent || "",  
-                    price: parseInt(cells[6]?.textContent || "0", 0)     // Price
+                    address: cells[5]?.textContent || "",
+                    dishComments: cells[6]?.textContent || "",
+                    price: parseInt(cells[7]?.textContent || "0", 0),    // Price
+                    paymentMethod: cells[8]?.textContent || ""
                 };
                 markedRows.set(id, order);
                 console.log(`Order ${index + 1}:`, order);
@@ -353,7 +354,12 @@
                                 }
 
                                 set(ref(db, `Orders/${id}`), null);
-                                set(ref(db, `PreviousOrders/${id}`), order);
+                                if(order.address.trim() !== ''){
+                                    set(ref(db, `Deliveries/${id}`), order);
+                                }
+                                else{
+                                    set(ref(db, `PreviousOrders/${id}`), order);
+                                }
                                 
                                 loadOrders();;
                             });
