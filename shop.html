@@ -145,6 +145,7 @@
 
     <div id="customer-orders-floating-buttons" class="floating-buttons">
         <button id="shopStatusBtn" type="button">...</button>
+        <button id="inventoryBtn" type="button" style="background-color: black">ניהול מלאי</button>
         <button id="closeDayBtn" type="button" style="background-color: black">סגירת יום</button>
     </div>
 
@@ -205,6 +206,7 @@
         const PreviousOrders = ref(db, "PreviousOrders/");
 
         document.querySelector("#deleteOrdersBtn").addEventListener("click", deleteOrders);
+        document.querySelector("#inventoryBtn").addEventListener("click", function(){ window.location.href = 'inventory.html';});
         document.querySelector("#clearDbBtn").addEventListener("click", clearOrders);
         document.querySelector("#sendToDeliveriesBtn").addEventListener("click", sendToDeliveries);
         document.querySelector("#shopStatusBtn").addEventListener("click", function(){toggleShopStatus(true);});
