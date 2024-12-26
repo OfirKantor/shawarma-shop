@@ -58,8 +58,14 @@
             background-color: #f1f1f1;
         }
 
-        tr.marked {
+        tr.markedGreen {
             background-color: #d4edda !important;
+        }
+        tr.markedBlue {
+            background-color: #d4e2ed !important;
+        }
+        tr.markedRed {
+            background-color: #eddfd4 !important;
         }
 
         td {
@@ -239,7 +245,7 @@
                     price: parseInt(cells[7]?.textContent || "0", 0),    // Price
                     paymentMethod: cells[8]?.textContent || ""
                 };
-                markedRows.set(id, order);
+                markedRows.set(id, [order, "markedDummy"]);
                 console.log(`Order ${index + 1}:`, order);
             });
         }
@@ -389,6 +395,36 @@
                 });
         }
 
+        class RotatingColorMarker{
+            constructor(){
+                this.numberOfColors = 3;
+                this.index = 0;
+                this.markingColors = ["markedGreen", "markedBlue", "markedRed"]
+            }
+
+            nextColor(){
+                if(this.index == (this.numberOfColors -1)){
+                    this.index = 0;
+                }
+                else{
+                    this.index++;
+                }
+            }
+
+            previousColor(){
+                if(this.index == 0){
+                    this.index = (this.numberOfColors -1);
+                }
+                else{
+                    this.index--;
+                }
+            }
+
+            getColor(){
+                return this.markingColors[this.index];
+            }
+        }
+        let rcm = new RotatingColorMarker();
         function loadOrders() {
             get(ordersRef)
                 .then(snapshot => {
@@ -401,11 +437,15 @@
                             
                             row.addEventListener("click", function () {
                                 if (markedRows.has(id)) {
+                                    row.classList.remove(markedRows.get(id)[1]);
                                     markedRows.delete(id);
-                                    row.classList.remove("marked");
+                                    rcm.previousColor();
+
                                 } else {
-                                    markedRows.set(id, order);
-                                    row.classList.add("marked");
+                                    markedRows.set(id, [order,rcm.getColor()]);
+                                    row.classList.add(rcm.getColor());
+                                    rcm.nextColor();
+
                                 }
                             });
 
@@ -425,7 +465,7 @@
                                 loadOrders();;
                             });
 
-                            if (markedRows.has(id)) row.classList.add("marked");
+                            if (markedRows.has(id)) row.classList.add(markedRows.get(id)[1]);
 
                             row.innerHTML = `
                                 <td>${order.name}</td>
@@ -539,7 +579,7 @@
         document.getElementById('customer-orders-page').style.display = 'block';
         document.getElementById('close-day-page').style.display = 'none';
 
-        setInterval(loadOrders, 2000);
+        setInterval(loadOrders, 20000);
     </script>
 </body>
 </html>
