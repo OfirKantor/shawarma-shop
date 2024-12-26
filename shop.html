@@ -61,9 +61,6 @@
         tr.markedGreen {
             background-color: #d4edda !important;
         }
-        tr.markedBlue {
-            background-color: #d4e2ed !important;
-        }
         tr.markedRed {
             background-color: #eddfd4 !important;
         }
@@ -397,9 +394,9 @@
 
         class RotatingColorMarker{
             constructor(){
-                this.numberOfColors = 3;
+                this.numberOfColors = 2;
                 this.index = 0;
-                this.markingColors = ["markedGreen", "markedBlue", "markedRed"]
+                this.markingColors = ["markedGreen", "markedRed"]
             }
 
             nextColor(){
@@ -420,6 +417,14 @@
                 }
             }
 
+            preserveColor(currentColor){
+                let index = this.markingColors.indexOf(currentColor);
+                if( index == -1){
+                    index = 0;
+                }
+                this.index = index;
+            }
+
             getColor(){
                 return this.markingColors[this.index];
             }
@@ -437,9 +442,9 @@
                             
                             row.addEventListener("click", function () {
                                 if (markedRows.has(id)) {
+                                    rcm.preserveColor(markedRows.get(id)[1]);
                                     row.classList.remove(markedRows.get(id)[1]);
                                     markedRows.delete(id);
-                                    rcm.previousColor();
 
                                 } else {
                                     markedRows.set(id, [order,rcm.getColor()]);
@@ -451,6 +456,7 @@
 
                             row.addEventListener("dblclick", function () {
                                 if (markedRows.has(id)) {
+                                    rcm.preserveColor(markedRows.get(id)[1]);
                                     markedRows.delete(id);
                                 }
 
