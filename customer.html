@@ -380,11 +380,27 @@
                 <input type="checkbox" id="friesCheckBox" name="fries" value="צ'יפס" data-price="10"><span> צ'יפס (10₪)</span>
             </label>
             <label class="checkbox-btn2">
-                <input type="checkbox" id="cokeCheckBox" name="coke" value="קולה" data-price="5"><span> פחית קולה (5₪)</span>
+                <input type="checkbox" id="drinksCheckBox" name="drinks"><span>שתייה</span>
             </label>
-            <label class="checkbox-btn2">
-                <input type="checkbox" id="zeroCheckBox" name="zero" value="זירו" data-price="5"><span> פחית זירו (5₪)</span>
-            </label>
+            
+            <div id="drinksOptions" class="checkbox-group" style="display: none;">
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="drinkOption" value="קולה" data-price="5" onclick="this.nextElementSibling.style.color = this.checked ? 'red' : 'black'"> <span>פחית קולה (5₪)</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="drinkOption" value="זירו" data-price="5" onclick="this.nextElementSibling.style.color = this.checked ? 'red' : 'black'"> <span>פחית זירו (5₪)</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="drinkOption" value="ספרייט" data-price="5" onclick="this.nextElementSibling.style.color = this.checked ? 'green' : 'black'"> <span>פחית ספרייט (5₪)</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="drinkOption" value="פיוזטי" data-price="8" onclick="this.nextElementSibling.style.color = this.checked ? 'orange' : 'black'"> <span>פיוזטי חצי 0.5 ליטר (8₪)</span>
+                </label>
+                <label class="checkbox-btn">
+                    <input type="checkbox" name="drinkOption" value="ענבים" data-price="8" onclick="this.nextElementSibling.style.color = this.checked ? 'purple' : 'black'"> <span>פריגת ענבים 0.5 ליטר (8₪)</span>
+                </label>     
+            </div>
+            
 
             <label></label>
             <input type="text" id="dishComments" name="dishComments" placeholder="הערות/שם לזיהוי מנה" maxlength="25" required dir="rtl">
@@ -446,6 +462,15 @@
                 orderOptions.style.display = 'block'; // Show the group
             } else {
                 orderOptions.style.display = 'none'; // Hide the group
+            }
+        });
+
+        const drinksOptions = document.getElementById('drinksOptions');
+        document.getElementById('drinksCheckBox').addEventListener('change', function () {
+            if (this.checked) {
+                drinksOptions.style.display = 'block'; // Show the group
+            } else {
+                drinksOptions.style.display = 'none'; // Hide the group
             }
         });
 
@@ -513,11 +538,11 @@
         shippingCheckbox.addEventListener('click', updateShippingFee);
 
 
-        const checkboxes = document.querySelectorAll('input[name="Shawarma"], input[name="fries"], input[name="coke"], input[name="zero"]');
+        const checkboxes = document.querySelectorAll('input[name="Shawarma"], input[name="fries"], #drinksOptions input[type="checkbox"]');
         checkboxes.forEach(checkbox => checkbox.addEventListener('change', updatePrice));
 
         function updatePrice() {
-            const selectedOptions = Array.from(document.querySelectorAll('input[name="Shawarma"]:checked, input[name="fries"]:checked, input[name="coke"]:checked, input[name="zero"]:checked'));
+            const selectedOptions = Array.from(document.querySelectorAll('input[name="Shawarma"]:checked, input[name="fries"]:checked, #drinksOptions input[type="checkbox"]:checked'));
             var price = selectedOptions.reduce((total, option) => {
                 return total + parseInt(option.dataset.price, 10);
             }, 0);
@@ -525,12 +550,12 @@
             // full meal discount
             const isShawarmaChecked = document.querySelector('input[name="Shawarma"]').checked;
             const isFriesChecked = document.querySelector('input[name="fries"]').checked;
-            const isCokeChecked = document.querySelector('input[name="coke"]').checked;
-            const isZeroChecked = document.querySelector('input[name="zero"]').checked;
+            const isDrinkChecked = document.querySelector('input[name="drinks"]').checked;
+            var drinks = Array.from(document.querySelectorAll('input[name="drinkOption"]:checked')).map(option => option.value);
 
             const discount = 0;
         
-            if (isShawarmaChecked && isFriesChecked && (isCokeChecked || isZeroChecked)) {
+            if (isShawarmaChecked && isFriesChecked && (isDrinkChecked && !drinks.length)) {
                 price -= discount;
             }
 
@@ -557,10 +582,10 @@
             updateOrderReview();
         }
 
-        var ShawarmaCheckBox = document.getElementById('ShawarmaCheckBox')
-        var friesCheckBox = document.getElementById('friesCheckBox')
-        var cokeCheckBox = document.getElementById('cokeCheckBox')
-        var zeroCheckBox = document.getElementById('zeroCheckBox')
+        var ShawarmaCheckBox = document.getElementById('ShawarmaCheckBox');
+        var drinksCheckBox = document.getElementById('drinksCheckBox');
+        var friesCheckBox = document.getElementById('friesCheckBox');
+
 
 
         function getCurrentTime() {
@@ -574,21 +599,17 @@
         let stopHafira = false;
         function addOrder() {
             var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+            var drinks = Array.from(document.querySelectorAll('input[name="drinkOption"]:checked')).map(option => option.value);
             const price = parseInt(document.getElementById('price').textContent, 10);
             const additions = friesCheckBox.checked ? friesCheckBox.value : "";
-            const coke = cokeCheckBox.checked ? cokeCheckBox.value : "";
-            const zero = zeroCheckBox.checked ? zeroCheckBox.value : "";
             const address = "";
             const name = "";
             const phone = "";
             const paymentMethod = "";
             var dishCommentsTmp = document.getElementById('dishComments').value;
             const dishComments = dishCommentsTmp ? dishCommentsTmp : "";
-            const drinks = [cokeCheckBox.checked ? cokeCheckBox.value : "", zeroCheckBox.checked ? zeroCheckBox.value : ""]
-                .filter(Boolean)
-                .join(",");
 
-            if (!ShawarmaCheckBox.checked && !friesCheckBox.checked && !cokeCheckBox.checked && !zeroCheckBox.checked) {
+            if (!ShawarmaCheckBox.checked && !friesCheckBox.checked && !drinksCheckBox) {
                 alert("לא נבחרה מנה");
                 return;
             }
@@ -601,8 +622,16 @@
                 options = ["פיתה עם בשר, אנשים מוזרים... (סליחה ששפטנו)"];
             }
 
+            if(drinksCheckBox.checked && !drinks.length){
+                var userResponse = alert("לא נבחרה שתייה למנה");
+                return;
+            }
+
             if(!ShawarmaCheckBox.checked){
                 options = [""];
+            }
+            if(!drinksCheckBox.checked){
+                drinks = [""];
             }
             const orderTime = getCurrentTime();
             const order = {name, phone , options, additions, drinks, address, dishComments, price, paymentMethod, orderTime };
@@ -610,13 +639,15 @@
             orders.push(order);
             updateOrderReview();
 
-            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"],#ShawarmaCheckBox, #friesCheckBox , #cokeCheckBox ,#zeroCheckBox');
+            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"],#ShawarmaCheckBox, #friesCheckBox , #drinksCheckBox, #drinksOptions input[type="checkbox"]');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false; // Uncheck each checkbox
+                checkbox.nextElementSibling.style.color = 'black';
             });
             document.getElementById('dishComments').value = "";
             document.getElementById('price').textContent = "0"; // Reset total price
             document.getElementById('orderOptions').style.display = 'none';
+            document.getElementById('drinksOptions').style.display = 'none';
             document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
 
             if(!stopHafira){
@@ -694,7 +725,7 @@
             }
 
             // Add drinks if not empty
-            if (order.drinks && order.drinks.trim() !== '') {
+            if (order.drinks && order.drinks.length > 0 && order.drinks[0].trim() !== '') {
                 orderDetails.push(order.drinks);
             }
 
