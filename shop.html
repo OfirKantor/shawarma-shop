@@ -98,13 +98,21 @@
             margin-left: 10px; /* Adjust for RTL layout */
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 2000px) {
             .container {
                 padding: 15px;
             }
 
             table {
                 font-size: 12px;
+                table-layout: fixed; /* Ensure consistent column widths */
+                width: 100%; /* Table spans the full width of the container */
+            }
+
+            th, td {
+                padding: 5px; /* Reduce padding inside table cells */
+                text-align: center; /* Align content for better readability */
+                white-space: normal; /* Allow text wrapping within cells */
             }
 
             button {
@@ -153,9 +161,9 @@
         <button id="closeDayBtn" type="button" style="background-color: black">סגירת יום</button>
     </div>
 
-    <div id="close-day-page" class="container" style="display: none;">
+    <div id="close-day-page" class="container" style="display: none; overflow-x: auto; padding: 1em; box-sizing: border-box;">
         <h2>סיכום הזמנות היום</h2>
-        <table id="previousOrdersTable">
+        <table id="previousOrdersTable" style="width: 100%; border-collapse: collapse; table-layout: auto; word-wrap: break-word;">
             <thead class="black-header">
                 <tr>
                     <th>שם</th>
