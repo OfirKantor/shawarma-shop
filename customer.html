@@ -349,10 +349,10 @@
                     <input type="checkbox" name="options" value="חריף מאוד"> <span>חריף מאוד</span>
                 </label>
                 <label class="checkbox-btn">
-                    <input type="checkbox" name="options" value="מלפפון"> <span>מלפפון</span>
+                    <input type="checkbox" name="options" value="עגבניה ומלפפון"> <span>עגבניה ומלפפון</span>
                 </label>
                 <label class="checkbox-btn">
-                    <input type="checkbox" name="options" value="עגבנייה"> <span>עגבנייה</span>
+                    <input type="checkbox" name="options" value="כרוב סגול במיונז"> <span>כרוב סגול במיונז</span>
                 </label>
                 <label class="checkbox-btn">
                     <input type="checkbox" name="options" value="כרוב לבן"> <span>כרוב לבן</span>
@@ -562,6 +562,15 @@
         var cokeCheckBox = document.getElementById('cokeCheckBox')
         var zeroCheckBox = document.getElementById('zeroCheckBox')
 
+
+        function getCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
         let stopHafira = false;
         function addOrder() {
             var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
@@ -595,8 +604,8 @@
             if(!ShawarmaCheckBox.checked){
                 options = [""];
             }
-
-            const order = {name, phone , options, additions, drinks, address, dishComments, price, paymentMethod };
+            const orderTime = getCurrentTime();
+            const order = {name, phone , options, additions, drinks, address, dishComments, price, paymentMethod, orderTime };
 
             orders.push(order);
             updateOrderReview();

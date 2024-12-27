@@ -122,6 +122,7 @@
         <button id="clearDbBtn" type="button" style="background-color: black">נקה הזמנות</button>
         <button id="sendToDeliveriesBtn" type="button" style="background-color: green">שלח למסך משלוחים</button>
         <button id="deleteOrdersBtn" type="button" style="background-color: red">ביטול הזמנה</button>
+        <p><strong>הזמנות פעילות:</strong> <span id="activeOrdersCount">0</span></p>
 
         <table id="ordersTable">
             <thead>
@@ -148,7 +149,7 @@
 
     <div id="customer-orders-floating-buttons" class="floating-buttons">
         <button id="shopStatusBtn" type="button">...</button>
-        <button id="inventoryBtn" type="button" style="background-color: black">ניהול מלאי</button>
+        <!-- <button id="inventoryBtn" type="button" style="background-color: black">ניהול מלאי</button> -->
         <button id="closeDayBtn" type="button" style="background-color: black">סגירת יום</button>
     </div>
 
@@ -166,6 +167,9 @@
                     <th>הערות למנה</th>
                     <th>מחיר</th>
                     <th>שיטת תשלום</th>
+                    <th>שעת הזזמנה</th>
+                    <th>שעת טיפול</th>
+                    <th>זמן טיפול</th>
 
                 </tr>
             </thead>
@@ -209,7 +213,7 @@
         const PreviousOrders = ref(db, "PreviousOrders/");
 
         document.querySelector("#deleteOrdersBtn").addEventListener("click", deleteOrders);
-        document.querySelector("#inventoryBtn").addEventListener("click", function(){ window.location.href = 'inventory.html';});
+        // document.querySelector("#inventoryBtn").addEventListener("click", function(){ window.location.href = 'inventory.html';});
         document.querySelector("#clearDbBtn").addEventListener("click", clearOrders);
         document.querySelector("#sendToDeliveriesBtn").addEventListener("click", sendToDeliveries);
         document.querySelector("#shopStatusBtn").addEventListener("click", function(){toggleShopStatus(true);});
@@ -283,8 +287,9 @@
             }
             if (userResponse) {
             const deletePromises = Array.from(markedRows).map((order) => {
+                order[1][0].handledTime = getCurrentTime();
                 set(ref(db, `Orders/${order[0]}`), null);
-                set(ref(db, `PreviousOrders/${order[0]}`), order[1]);
+                set(ref(db, `PreviousOrders/${order[0]}`), order[1][0]);
             });
             Promise.all(deletePromises)
                 .then(() => {
@@ -339,10 +344,11 @@
                 
                 const deletePromises = Array.from(markedRows).map((order) => {
                     if(shouldUpdateAddress){
-                        order[1].address = address;
+                        order[1][0].address = address;
                     }
+                    order[1][0].handledTime = getCurrentTime();
                     set(ref(db, `Orders/${order[0]}`), null);
-                    set(ref(db, `Deliveries/${order[0]}`), order[1]);
+                    set(ref(db, `Deliveries/${order[0]}`), order[1][0]);
                 });
                 Promise.all(deletePromises)
                     .then(() => {
@@ -429,14 +435,26 @@
                 return this.markingColors[this.index];
             }
         }
+
+        function getCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+
+
         let rcm = new RotatingColorMarker();
         function loadOrders() {
+            let activeOrdersCount = 0;
             get(ordersRef)
                 .then(snapshot => {
                     if (snapshot.exists()) {
                         ordersTable.innerHTML = "";
                         const data = snapshot.val();
                         Object.entries(data).forEach(([id, order]) => {
+                            activeOrdersCount++;
                             const row = document.createElement("tr");
                             row.dataset.id = id;
                             
@@ -459,7 +477,7 @@
                                     rcm.preserveColor(markedRows.get(id)[1]);
                                     markedRows.delete(id);
                                 }
-
+                                order.handledTime = getCurrentTime();
                                 set(ref(db, `Orders/${id}`), null);
                                 if(order.address.trim() !== ''){
                                     set(ref(db, `Deliveries/${id}`), order);
@@ -476,7 +494,7 @@
                             row.innerHTML = `
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
-                                <td>${order.options.join(", ")}</td>
+                                <td><span style="font-weight: bold;">${order.options.join(", ")}</td>
                                 <td>${order.additions}</td>
                                 <td>${order.drinks}</td>
                                 <td>${order.address}</td>
@@ -486,6 +504,7 @@
                             `;
                             ordersTable.appendChild(row);
                         });
+                        document.getElementById('activeOrdersCount').textContent = activeOrdersCount;
                     } else {
                         ordersTable.innerHTML = "";
                     }
@@ -511,6 +530,8 @@
                                 let shippingItemString = order.address + '.' + order.name + '.' + order.phone;
                                 shippingSet.add(shippingItemString);
                             }
+
+                            const orderHandlingTime = calculateDeltaTime(order.handledTime, order.orderTime);
                             row.innerHTML = `
                                 <td>${order.name}</td>
                                 <td>${order.phone}</td>
@@ -521,6 +542,9 @@
                                 <td>${order.dishComments}</td>
                                 <td>${order.price || "N/A"}</td>
                                 <td>${order.paymentMethod}</td>
+                                <td>${order.orderTime}</td>
+                                <td>${order.handledTime}</td>
+                                <td>${orderHandlingTime}</td>
 
                             `;
                             OverallIncome += order.price;
@@ -580,7 +604,26 @@
             const filename = `סגירת יום-${today}.xlsx`; // Filename with today's date
             exportTableToExcel(filename);
         });
+        function calculateDeltaTime(time1, time2) {
+            // Convert HH:MM:SS to total seconds
+            const timeToSeconds = (time) => {
+                const [hours, minutes, seconds] = time.split(':').map(Number);
+                return hours * 3600 + minutes * 60 + seconds;
+            };
 
+            const seconds1 = timeToSeconds(time1);
+            const seconds2 = timeToSeconds(time2);
+
+            // Calculate the absolute difference in seconds
+            const deltaSeconds = Math.abs(seconds1 - seconds2);
+
+            // Convert delta seconds to minutes and seconds
+            const minutes = Math.floor(deltaSeconds / 60);
+            const seconds = deltaSeconds % 60;
+
+            // Format as MM:SS
+            return `${minutes}:${String(seconds).padStart(2, '0')}`;
+        }
 
         document.getElementById('customer-orders-page').style.display = 'block';
         document.getElementById('close-day-page').style.display = 'none';
