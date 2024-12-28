@@ -397,13 +397,22 @@ function exportTableToExcel(filename) {
     // Create a workbook and a worksheet
     let wb = XLSX.utils.book_new();
     let ws = XLSX.utils.table_to_sheet(table);
+    ws['!rtl'] = true;
 
     // Add two rows directly under the table
     const range = XLSX.utils.decode_range(ws['!ref']);
     const lastRow = range.e.r + 1; // Next row index
 
+    // Adjust column widths if needed
+    ws['!cols'] = Array.from({ length: range.e.c + 1 }, () => ({ width: 15 })); // Adjust width for all columns
+
+  
+
     const overallIncome = parseInt(document.getElementById("totalPrice").textContent, 10);
     const totalShippingIncome = parseInt(document.getElementById("totalShipmentsIncome").textContent, 10);
+    const averageOrderHadnlingTime = document.getElementById("averageOrderHadnlingTime").textContent.trim();
+
+    
 
     ws[XLSX.utils.encode_cell({ r: lastRow, c: 0 })] = { t: "s", v: "סהכ:" }; // First column
     ws[XLSX.utils.encode_cell({ r: lastRow, c: 1 })] = { t: "n", v: overallIncome };    // Second column
@@ -412,8 +421,11 @@ function exportTableToExcel(filename) {
     ws[XLSX.utils.encode_cell({ r: lastRow + 1, c: 0 })] = { t: "s", v: "סהכ משלוחים:" }; // First column
     ws[XLSX.utils.encode_cell({ r: lastRow + 1, c: 1 })] = { t: "n", v: totalShippingIncome };     // Second column
 
+    ws[XLSX.utils.encode_cell({ r: lastRow + 2, c: 0 })] = { t: "s", v: "זמן טיפול ממוצע במנה:" }; // First column
+    ws[XLSX.utils.encode_cell({ r: lastRow + 2, c: 1 })] = { t: "s", v: averageOrderHadnlingTime };     // Second column
+
     // Update the range to include new rows
-    range.e.r += 2;
+    range.e.r += 3;
     ws['!ref'] = XLSX.utils.encode_range(range);
 
     // Append worksheet to workbook
