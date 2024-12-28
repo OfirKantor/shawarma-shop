@@ -316,7 +316,7 @@ function loadOrders() {
             } else {
                 ordersTable.innerHTML = "";
             }
-            document.getElementById('activeOrdersCount').textContent = activeOrdersCount;
+            document.getElementById('activeOrdersCount').textContent = activeOrdersCount; 
         })
         .catch(error => {
             console.error("Error loading orders:", error);
