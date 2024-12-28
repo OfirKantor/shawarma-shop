@@ -313,10 +313,10 @@ function loadOrders() {
                     `;
                     ordersTable.appendChild(row);
                 });
-                document.getElementById('activeOrdersCount').textContent = activeOrdersCount;
             } else {
                 ordersTable.innerHTML = "";
             }
+            document.getElementById('activeOrdersCount').textContent = activeOrdersCount;
         })
         .catch(error => {
             console.error("Error loading orders:", error);
