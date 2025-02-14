@@ -58,20 +58,44 @@
     <h1>ניהול מלאי</h1>
     <form id="inventoryForm">
         <div class="form-group">
-            <label for="input1">שווארמה:</label>
-            <input type="number" id="shawarma" size="10" required>
+            <label for="input1">פיתות:</label>
+            <input type="number"  min="0" id="pita" size="10" required>
         </div>
         <div class="form-group">
-            <label for="input1">צ'יפס:</label>
-            <input type="number" id="fries" size="10" required>
+            <label for="input1">לאפות:</label>
+            <input type="number" min="0" id="lafa" size="10" required>
+        </div>
+        <div class="form-group">
+            <label for="input3">צ'יפס:</label>
+            <input type="number" min="0" id="fries" size="10" required>
+        </div>
+        <div class="form-group">
+            <label for="input3">פוטטו:</label>
+            <input type="number" min="0" id="potato" size="10" required>
         </div>
         <div class="form-group">
             <label for="input2">קולה:</label>
-            <input type="number" id="coke" size="10" required>
+            <input type="number" min="0" id="coke" size="10" required>
         </div>
         <div class="form-group">
             <label for="input3">זירו:</label>
-            <input type="number" id="zero" size="10" required>
+            <input type="number" min="0" id="zero" size="10" required>
+        </div>
+        <div class="form-group">
+            <label for="input3">ענבים:</label>
+            <input type="number" min="0" id="grape" size="10" required>
+        </div>
+        <div class="form-group">
+            <label for="input3">פיוזטי:</label>
+            <input type="number" min="0" id="fuzeTea" size="10" required>
+        </div>
+        <div class="form-group">
+            <label for="input3">ספרייט:</label>
+            <input type="number" min="0" id="sprite" size="10" required>
+        </div>
+        <div class="form-group">
+            <label for="input3">שוופס פירות:</label>
+            <input type="number" min="0" id="schweppes" size="10" required>
         </div>
         <button type="button" id="saveButton" style="background-color:green">שמור</button>
     </form>

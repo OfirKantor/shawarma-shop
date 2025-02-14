@@ -331,9 +331,24 @@
         .multi-color-radio-btn input[value="פיוזטי"]:checked + span {
             color: orange;
         }
+        .multi-color-radio-btn input[value="שוופס פירות"]:checked + span {
+            color: purple;
+        }
 
         .multi-color-radio-btn input[value="ענבים"]:checked + span {
             color: purple;
+        }
+        .multi-color-radio-btn input[value="ציפס"]:checked + span {
+            color: green;
+        }
+        .multi-color-radio-btn input[value="פוטטוס"]:checked + span {
+            color: green;
+        }
+        .multi-color-radio-btn input[value="בפיתה"]:checked + span {
+            color: blue;
+        }
+        .multi-color-radio-btn input[value="בלאפה"]:checked + span {
+            color: blue;
         }
         
     </style>
@@ -373,12 +388,21 @@
 
 
             <p><strong>מה תרצו להזמין?</strong></p>
-            <!-- <h5 style="color: blue;">ארוחה (שווארמה, צ'יפס ושתיה) ב₪45 במקום ₪50</h5> -->
+            <!-- <h5 style="color: blue;">ארוחה (שווארמה, ציפס ושתיה) ב₪45 במקום ₪50</h5> -->
 
 
             <label class="checkbox-btn2">
-                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma" data-price="35"><span> שווארמה בפיתה (35₪)</span>
+                <input type="checkbox" id="ShawarmaCheckBox" name="Shawarma"><span>שווארמה</span>
             </label>
+
+            <div id="wrappingOptions" class="radio-group" style="display: none;">
+                <label class="multi-color-radio-btn">
+                    <input type="radio" name="wrappingOption" value="בפיתה" data-price="35"> <span>בפיתה (35₪)</span>
+                </label>
+                <label class="multi-color-radio-btn">
+                    <input type="radio" name="wrappingOption" value="בלאפה" data-price="45"> <span>בלאפה (45₪)</span>
+                </label>
+            </div>
 
 
             <div id="orderOptions" class="checkbox-group" style="display: none;">
@@ -417,11 +441,20 @@
                 </label>
             </div>
             
-            
-
             <label class="checkbox-btn2">
-                <input type="checkbox" id="friesCheckBox" name="fries" value="צ'יפס" data-price="10"><span> צ'יפס (10₪)</span>
+                <input type="checkbox" id="sidesCheckBox" name="sides"><span>מטוגנים</span>
             </label>
+
+            <div id="sidesOptions" class="radio-group" style="display: none;">
+                <label class="multi-color-radio-btn">
+                    <input type="radio" name="sideOption" value="ציפס" data-price="10"> <span>צ'יפס (10₪)</span>
+                </label>
+                <label class="multi-color-radio-btn">
+                    <input type="radio" name="sideOption" value="פוטטוס" data-price="12"> <span>פוטטוס (12₪)</span>
+                </label>
+            </div>
+
+         
             <label class="checkbox-btn2">
                 <input type="checkbox" id="drinksCheckBox" name="drinks"><span>שתייה</span>
             </label>
@@ -437,13 +470,15 @@
                     <input type="radio" name="drinkOption" value="ספרייט" data-price="5"> <span>פחית ספרייט (5₪)</span>
                 </label>
                 <label class="multi-color-radio-btn">
-                    <input type="radio" name="drinkOption" value="פיוזטי" data-price="8"> <span>פיוזטי חצי 0.5 ליטר (8₪)</span>
+                    <input type="radio" name="drinkOption" value="פיוזטי" data-price="6"> <span>פחית פיוזטי ספרינג (6₪)</span>
                 </label>
                 <label class="multi-color-radio-btn">
                     <input type="radio" name="drinkOption" value="ענבים" data-price="8"> <span>פריגת ענבים 0.5 ליטר (8₪)</span>
-                </label>     
+                </label>    
+                <label class="multi-color-radio-btn">
+                    <input type="radio" name="drinkOption" value="שוופס פירות" data-price="9"> <span>שוופס פירות יער מוגז עדין (9₪)</span>
+                </label>   
             </div>
-            
 
             <label></label>
             <input type="text" id="dishComments" name="dishComments" placeholder="הערות/שם לזיהוי מנה" maxlength="25" required dir="rtl">
@@ -486,6 +521,6 @@
         <h3>(או עד סוף הגלגל)</h3>
     </div>
 
-    <script type="module" src="customer.js"></script>
+    <script type="module" src="hagalgal.js"></script>
 </body>
 </html>
