@@ -32,6 +32,35 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
             updatePrice();
         });
 
+        const sidesOptions = document.getElementById('sidesOptions');
+        document.getElementById('sidesCheckBox').addEventListener('change', function () {
+            if (this.checked) {
+                sidesOptions.style.display = 'block'; // Show the group
+            } else {
+                sidesOptions.style.display = 'none'; // Hide the group
+                const checkboxes = document.querySelectorAll('#sidesCheckBox, #sidesOptions input[type="radio"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false; // Uncheck each checkbox
+                });
+            }
+            updatePrice();
+        });
+
+        const wrappingOptions = document.getElementById('wrappingOptions');
+        document.getElementById('ShawarmaCheckBox').addEventListener('change', function () {
+            if (this.checked) {
+                wrappingOptions.style.display = 'block'; // Show the group
+            } else {
+                wrappingOptions.style.display = 'none'; // Hide the group
+                const checkboxes = document.querySelectorAll('#ShawarmaCheckBox, #wrappingOptions input[type="radio"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false; // Uncheck each checkbox
+                });
+            }
+            updatePrice();
+        });
+
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getDatabase, push, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -96,24 +125,26 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
         shippingCheckbox.addEventListener('click', updateShippingFee);
 
 
-        const checkboxes = document.querySelectorAll('input[name="Shawarma"], input[name="fries"], #drinksOptions input[type="radio"]');
+        const checkboxes = document.querySelectorAll('#wrappingOptions input[type="radio"], #sidesOptions input[type="radio"], #drinksOptions input[type="radio"]');
         checkboxes.forEach(checkbox => checkbox.addEventListener('change', updatePrice));
 
         function updatePrice() {
-            const selectedOptions = Array.from(document.querySelectorAll('input[name="Shawarma"]:checked, input[name="fries"]:checked, #drinksOptions input[type="radio"]:checked'));
+            const selectedOptions = Array.from(document.querySelectorAll('#wrappingOptions input[type="radio"]:checked, #sidesOptions input[type="radio"]:checked, #drinksOptions input[type="radio"]:checked'));
             var price = selectedOptions.reduce((total, option) => {
                 return total + parseInt(option.dataset.price, 10);
             }, 0);
 
             // full meal discount
             const isShawarmaChecked = document.querySelector('input[name="Shawarma"]').checked;
-            const isFriesChecked = document.querySelector('input[name="fries"]').checked;
+            const issidesChecked = document.querySelector('input[name="sides"]').checked;
             const isDrinkChecked = document.querySelector('input[name="drinks"]').checked;
             var drinks = Array.from(document.querySelectorAll('input[name="drinkOption"]:checked')).map(option => option.value);
+            var sides = Array.from(document.querySelectorAll('input[name="sideOption"]:checked')).map(option => option.value);
+
 
             const discount = 0;
         
-            if (isShawarmaChecked && isFriesChecked && (isDrinkChecked && !drinks.length)) {
+            if (isShawarmaChecked && (issidesChecked && !sides.lenght) && (isDrinkChecked && !drinks.length)) {
                 price -= discount;
             }
 
@@ -142,7 +173,7 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
 
         var ShawarmaCheckBox = document.getElementById('ShawarmaCheckBox');
         var drinksCheckBox = document.getElementById('drinksCheckBox');
-        var friesCheckBox = document.getElementById('friesCheckBox');
+        var sidesCheckBox = document.getElementById('sidesCheckBox');
 
 
 
@@ -157,9 +188,10 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
         let stopHafira = false;
         function addOrder() {
             var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(option => option.value);
+            var wrapping = Array.from(document.querySelectorAll('input[name="wrappingOption"]:checked')).map(option => option.value);
             var drinks = Array.from(document.querySelectorAll('input[name="drinkOption"]:checked')).map(option => option.value);
+            var additions = Array.from(document.querySelectorAll('input[name="sideOption"]:checked')).map(option => option.value);
             const price = parseInt(document.getElementById('price').textContent, 10);
-            const additions = friesCheckBox.checked ? friesCheckBox.value : "";
             const address = "";
             const name = "";
             const phone = "";
@@ -167,17 +199,23 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
             var dishCommentsTmp = document.getElementById('dishComments').value;
             const dishComments = dishCommentsTmp ? dishCommentsTmp : "";
 
-            if (!ShawarmaCheckBox.checked && !friesCheckBox.checked && !drinksCheckBox.checked) {
+            if (!ShawarmaCheckBox.checked && !sidesCheckBox.checked && !drinksCheckBox.checked) {
                 alert("לא נבחרה מנה");
                 return;
             }
 
+            if (ShawarmaCheckBox.checked && !wrapping.length) {
+                alert("יש לבחור במה לשים את השווארמה");
+                return;
+            }
+
+
             if (ShawarmaCheckBox.checked && !options.length) {
-                var userResponse = confirm("לא נבחרו תוספות לשווארמה. תרצו רק פיתה עם בשר? (זה בסדר, אנחנו לא שופטים :) )");
+                var userResponse = confirm("לא נבחרו תוספות לשווארמה. תרצו רק בשר? (זה בסדר, אנחנו לא שופטים :) )");
                 if(!userResponse){
                     return;
                 }
-                options = ["פיתה עם בשר, אנשים מוזרים... (סליחה ששפטנו)"];
+                options = ["רק בשר, אנשים מוזרים... (סליחה ששפטנו)"];
             }
 
             if(drinksCheckBox.checked && !drinks.length){
@@ -185,19 +223,32 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
                 return;
             }
 
+            if(sidesCheckBox.checked && !additions.length){
+                var userResponse = alert("לא נבחרה תוספת למנה");
+                return;
+            }
+
             if(!ShawarmaCheckBox.checked){
+                wrapping = [""];
                 options = [""];
             }
+            
             if(!drinksCheckBox.checked){
                 drinks = [""];
             }
+
+            if(!sidesCheckBox.checked){
+                additions = [""];
+            }
             const orderTime = "";
-            const order = {name, phone , options, additions, drinks, address, dishComments, price, paymentMethod, orderTime };
+            const inventoryUpdated = false;
+            const order = {name, phone ,wrapping, options, additions, drinks, address, dishComments, price, paymentMethod, orderTime, inventoryUpdated };
 
             orders.push(order);
             updateOrderReview();
+            updateInventory(order, false);
 
-            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"],#ShawarmaCheckBox, #friesCheckBox , #drinksCheckBox, #drinksOptions input[type="radio"]');
+            const checkboxes = document.querySelectorAll('#orderOptions input[type="checkbox"],#ShawarmaCheckBox,#wrappingOptions input[type="radio"], #sidesCheckBox, #sidesOptions input[type="radio"] , #drinksCheckBox, #drinksOptions input[type="radio"]');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false; // Uncheck each checkbox
             });
@@ -205,6 +256,8 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
             document.getElementById('price').textContent = "0"; // Reset total price
             document.getElementById('orderOptions').style.display = 'none';
             document.getElementById('drinksOptions').style.display = 'none';
+            document.getElementById('sidesOptions').style.display = 'none';
+            document.getElementById('wrappingOptions').style.display = 'none';
             document.getElementById("orderReviewSection").style.display = 'block'; // Show review section
 
             if(!stopHafira){
@@ -275,11 +328,11 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
 
             // Add options with prefix if not empty
             if (order.options && order.options.length > 0 && order.options[0].trim() !== '') {
-                orderDetails.push(`שווארמה בפיתה עם: ${order.options.join(', ')}`);
+                orderDetails.push(`שווארמה ${order.wrapping} עם: ${order.options.join(', ')}`);
             }
 
             // Add additions if not empty
-            if (order.additions && order.additions.trim() !== '') {
+            if (order.additions && order.additions.length > 0 && order.additions[0].trim() !== '') {
                 orderDetails.push(order.additions);
             }
 
@@ -307,6 +360,7 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
                                                           </div>`;
                 orderDiv.querySelector('button').addEventListener('click', function() {
                     removeOrder(indexToRemove);
+                    updateInventory(order, true);
                 });
             }
             else{
@@ -393,11 +447,6 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
             document.getElementById('paymentMethodPreview').textContent = paymentMethod + paymentComment;
             document.getElementById('paymentMethodPreview').style.color = "blue";
 
-            
-
-            // Log the method (or handle the case where no button is selected)
-            
-
 
             // Hide order page and show preview page
             document.getElementById('order-page').style.display = 'none';
@@ -405,6 +454,217 @@ document.addEventListener('DOMContentLoaded', loadOrdersPage);
 
             orders = []; // Reset orders after sending
         }
+
+        var currenOrderInventory = {
+            lafa: 0,
+            pita: 0,
+            coke: 0,
+            fries: 0,
+            potato: 0,
+            zero: 0,
+            grape: 0,
+            fuzeTea: 0,
+            sprite: 0,
+            schweppes: 0
+        }; 
+
+
+        async function initInventory(){
+            const inventoryRef = ref(db, "config/inventory");
+
+                try {
+                    const snapshot = await get(inventoryRef);
+                    if (snapshot.exists()) {
+                        const inventory = snapshot.val();
+                        currenOrderInventory.pita = inventory.pita;
+                        currenOrderInventory.lafa = inventory.lafa;
+                        currenOrderInventory.potato = inventory.potato;
+                        currenOrderInventory.fries = inventory.fries;
+                        currenOrderInventory.coke = inventory.coke;
+                        currenOrderInventory.zero = inventory.zero;
+                        currenOrderInventory.grape = inventory.grape;
+                        currenOrderInventory.fuzeTea = inventory.fuzeTea;
+                        currenOrderInventory.sprite = inventory.sprite;
+                        currenOrderInventory.schweppes = inventory.schweppes;
+                    } else {
+                        console.log("No inventory data available");
+                    }
+                } catch (error) {
+                    console.error("Error loading shop status:", error);
+                }
+        }
+
+        function applyInventoryToView(){
+            var radioButton = document.querySelector('input[name="wrappingOption"][value="בלאפה"]');
+            if(currenOrderInventory.lafa === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="wrappingOption"][value="בפיתה"]');
+            if(currenOrderInventory.pita === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="sideOption"][value="ציפס"]');
+            if(currenOrderInventory.fries === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="sideOption"][value="פוטטוס"]');
+            if(currenOrderInventory.potato === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="drinkOption"][value="קולה"]');
+            if(currenOrderInventory.coke === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="drinkOption"][value="זירו"]');
+            if(currenOrderInventory.zero === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="drinkOption"][value="ספרייט"]');
+            if(currenOrderInventory.sprite === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="drinkOption"][value="פיוזטי"]');
+            if(currenOrderInventory.fuzeTea === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="drinkOption"][value="שוופס פירות"]');
+            if(currenOrderInventory.schweppes === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+
+            radioButton = document.querySelector('input[name="drinkOption"][value="ענבים"]');
+            if(currenOrderInventory.grape === 0 ){
+                radioButton.disabled = true;
+                radioButton.parentElement.style.opacity = 0.4;
+            }
+            else{
+                radioButton.disabled = false;
+                radioButton.parentElement.style.opacity = 1;
+            }
+        }
+
+        
+        function updateCount(count, deleted){
+            if(deleted){
+                return ++count;
+            }
+            if(count > 0){
+                --count;
+            }
+            return count;
+        }
+
+        function updateInventory(order, deleted) {
+                switch (order.drinks[0]){
+                case "קולה":
+                    currenOrderInventory.coke = updateCount(currenOrderInventory.coke, deleted);
+                    break;
+                case "זירו":
+                    currenOrderInventory.zero = updateCount(currenOrderInventory.zero, deleted);
+                    break;
+                case "פיוזטי":
+                    currenOrderInventory.fuzeTea = updateCount(currenOrderInventory.fuzeTea, deleted);
+                    break;
+                case "ענבים":
+                    currenOrderInventory.grape = updateCount(currenOrderInventory.grape, deleted);
+                    break;
+                case "ספרייט":
+                    currenOrderInventory.sprite = updateCount(currenOrderInventory.sprite, deleted);
+                    break;
+                case "שוופס פירות":
+                    currenOrderInventory.schweppes = updateCount(currenOrderInventory.schweppes, deleted);
+                    break;
+                default:
+                    break;
+                
+            }
+
+            switch (order.wrapping[0]){
+                case "בפיתה":
+                    currenOrderInventory.pita = updateCount(currenOrderInventory.pita, deleted);
+                    break;
+                case "בלאפה":
+                    currenOrderInventory.lafa = updateCount(currenOrderInventory.lafa, deleted);
+                    break;
+                default:
+                    break;
+                
+            }
+
+            switch (order.additions[0]){
+                case "ציפס":
+                    currenOrderInventory.fries = updateCount(currenOrderInventory.fries, deleted);
+                    break;
+                case "פוטטוס":
+                    currenOrderInventory.potato = updateCount(currenOrderInventory.potato, deleted);
+                    break;
+                default:
+                    break;
+                
+            }   
+            
+            applyInventoryToView();
+        }  
+
+        async function initInventoryWrapper(){
+                await initInventory();
+                applyInventoryToView();
+        }
+
+        initInventoryWrapper();
 
         document.querySelector('#newOrderBtn').addEventListener('click', () => {
             // Reload the page to start a new order

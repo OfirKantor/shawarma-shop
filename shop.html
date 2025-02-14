@@ -98,6 +98,11 @@
             margin-left: 10px; /* Adjust for RTL layout */
         }
 
+        #ordersTable th, #ordersTable td {
+        word-wrap: break-word; /* Break long words */
+    }
+
+    
         @media (max-width: 2000px) {
             .container {
                 padding: 15px;
@@ -131,6 +136,8 @@
         <button id="sendToDeliveriesBtn" type="button" style="background-color: green">שלח למסך משלוחים</button>
         <button id="deleteOrdersBtn" type="button" style="background-color: red">ביטול הזמנה</button>
         <p><strong>הזמנות פעילות:</strong> <span id="activeOrdersCount">0</span></p>
+        <p><strong>מלאי:</strong> <span id="inventoryTag"></span></p>
+
 
         <table id="ordersTable">
             <thead>
@@ -138,7 +145,8 @@
                     <th>שם</th>
                     <th>טלפון</th>
                     <th>שווארמה</th>
-                    <th>תוספת</th>
+                    <th>תוספות</th>
+                    <th>מטוגנים</th>
                     <th>שתייה</th>
                     <th>כתובת למשלוח</th>
                     <th>הערות למנה</th>
@@ -157,7 +165,7 @@
 
     <div id="customer-orders-floating-buttons" class="floating-buttons">
         <button id="shopStatusBtn" type="button">...</button>
-        <!-- <button id="inventoryBtn" type="button" style="background-color: black">ניהול מלאי</button> -->
+        <button id="inventoryBtn" type="button" style="background-color: black">ניהול מלאי</button>
         <button id="closeDayBtn" type="button" style="background-color: black">סגירת יום</button>
     </div>
 
@@ -169,7 +177,8 @@
                     <th>שם</th>
                     <th>טלפון</th>
                     <th>שווארמה</th>
-                    <th>תוספת</th>
+                    <th>תוספות</th>
+                    <th>מטוגנים</th>
                     <th>שתייה</th>
                     <th>כתובת למשלוח</th>
                     <th>הערות למנה</th>
@@ -185,8 +194,9 @@
                 <!-- Orders will be displayed here -->
             </tbody>
         </table>
-        <p><strong>סך הכל:</strong> <span id="totalPrice">0</span></p>
-        <p><strong>סך הכל משלוחים:</strong> <span id="totalShipmentsIncome">0</span></p>
+        <p><strong>מספר הזמנות:</strong> <span id="orderCount">0</span></p>
+        <p><strong>סך הכל הכנסות:</strong> <span id="totalPrice">0</span></p>
+        <p><strong>סך הכל הכנסות ממשלוחים:</strong> <span id="totalShipmentsIncome">0</span></p>
         <p><strong>זמן טיפול ממוצע במנה:</strong> <span id="averageOrderHadnlingTime">0</span></p>
 
     </div>

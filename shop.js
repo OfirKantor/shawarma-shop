@@ -22,7 +22,7 @@ const ordersRef = ref(db, "Orders/");
 const PreviousOrders = ref(db, "PreviousOrders/");
 
 document.querySelector("#deleteOrdersBtn").addEventListener("click", deleteOrders);
-// document.querySelector("#inventoryBtn").addEventListener("click", function(){ window.location.href = 'inventory.html';});
+document.querySelector("#inventoryBtn").addEventListener("click", function(){ window.location.href = 'inventory.html';});
 document.querySelector("#clearDbBtn").addEventListener("click", clearOrders);
 document.querySelector("#sendToDeliveriesBtn").addEventListener("click", sendToDeliveries);
 document.querySelector("#shopStatusBtn").addEventListener("click", function(){toggleShopStatus(true);});
@@ -47,13 +47,14 @@ function addAllOrdersToMap() {
         const order = {
             name: cells[0]?.textContent || "",
             phone: cells[1]?.textContent || "",
+            wrapping : cells[2]?.textContent || "",
             options: options,
-            additions: cells[3]?.textContent || "",
-            drinks: cells[4]?.textContent || "",
-            address: cells[5]?.textContent || "",
-            dishComments: cells[6]?.textContent || "",
-            price: parseInt(cells[7]?.textContent || "0", 0),    // Price
-            paymentMethod: cells[8]?.textContent || ""
+            additions: cells[4]?.textContent || "",
+            drinks: cells[5]?.textContent || "",
+            address: cells[6]?.textContent || "",
+            dishComments: cells[7]?.textContent || "",
+            price: parseInt(cells[8]?.textContent || "0", 0),    // Price
+            paymentMethod: cells[9]?.textContent || ""
         };
         markedRows.set(id, [order, "markedDummy"]);
         console.log(`Order ${index + 1}:`, order);
@@ -100,6 +101,7 @@ function clearOrders() {
         set(ref(db, `Orders/${order[0]}`), null);
         set(ref(db, `PreviousOrders/${order[0]}`), order[1][0]);
     });
+
     Promise.all(deletePromises)
         .then(() => {
             markedRows.clear();
@@ -115,8 +117,10 @@ function clearOrders() {
 
 function deleteOrders() {
     var userResponse = confirm("מחיקת כל ההזמנות המסומנות?");
-    if (userResponse) {              
+    if (userResponse) {  
+        var deletedOrders = [];        
         const deletePromises = Array.from(markedRows).map((order) => {
+            deletedOrders.push(order[1][0]);
             set(ref(db, `Orders/${order[0]}`), null);
         });
         Promise.all(deletePromises)
@@ -128,7 +132,8 @@ function deleteOrders() {
                 console.error("Error deleting marked orders:", error);
                 alert("An error occurred while deleting marked orders.");
             });
-        
+        updateInventory(deletedOrders, true);
+
     }
 }
 
@@ -262,11 +267,18 @@ function loadOrders() {
             if (snapshot.exists()) {
                 ordersTable.innerHTML = "";
                 const data = snapshot.val();
+                var ordersToUpdateInInventory = [];
                 Object.entries(data).forEach(([id, order]) => {
                     activeOrdersCount++;
                     const row = document.createElement("tr");
                     row.dataset.id = id;
-                    
+
+                    if(!order.inventoryUpdated){
+                        ordersToUpdateInInventory.push(order);
+                        order.inventoryUpdated = true;
+                        set(ref(db, `Orders/${id}`), order)
+                    }
+
                     row.addEventListener("click", function () {
                         if (markedRows.has(id)) {
                             rcm.preserveColor(markedRows.get(id)[1]);
@@ -303,6 +315,7 @@ function loadOrders() {
                     row.innerHTML = `
                         <td>${order.name}</td>
                         <td>${order.phone}</td>
+                        <td>${order.wrapping}</td>
                         <td><span style="font-weight: bold;">${order.options.join(", ")}</td>
                         <td>${order.additions}</td>
                         <td>${order.drinks}</td>
@@ -313,10 +326,15 @@ function loadOrders() {
                     `;
                     ordersTable.appendChild(row);
                 });
+                if(ordersToUpdateInInventory.length > 0){
+                    updateInventory(ordersToUpdateInInventory, false);
+
+                }
             } else {
                 ordersTable.innerHTML = "";
             }
             document.getElementById('activeOrdersCount').textContent = activeOrdersCount; 
+            updateInventory([],false);
         })
         .catch(error => {
             console.error("Error loading orders:", error);
@@ -348,6 +366,7 @@ function loadClosingDay() {
                     row.innerHTML = `
                         <td>${order.name}</td>
                         <td>${order.phone}</td>
+                        <td>${order.wrapping}</td>
                         <td>${order.options.join(", ")}</td>
                         <td>${order.additions}</td>
                         <td>${order.drinks}</td>
@@ -375,6 +394,7 @@ function loadClosingDay() {
                 const averageOrderHandlingTimeInSeconds = calculateAverageHandlingTime(overallHandlingSeconds,numberOfOrders);
                 const shippingPrice = 5;
                 const totalShippingIncome = (shippingPrice * shippingSet.size)
+                document.getElementById('orderCount').textContent = numberOfOrders;
                 document.getElementById('totalPrice').textContent = OverallIncome;
                 document.getElementById('totalShipmentsIncome').textContent = totalShippingIncome;
                 document.getElementById('averageOrderHadnlingTime').textContent = averageOrderHandlingTimeInSeconds;
@@ -407,25 +427,27 @@ function exportTableToExcel(filename) {
     ws['!cols'] = Array.from({ length: range.e.c + 1 }, () => ({ width: 15 })); // Adjust width for all columns
 
   
-
+    const orderCount = parseInt(document.getElementById("orderCount").textContent, 10);
     const overallIncome = parseInt(document.getElementById("totalPrice").textContent, 10);
     const totalShippingIncome = parseInt(document.getElementById("totalShipmentsIncome").textContent, 10);
     const averageOrderHadnlingTime = document.getElementById("averageOrderHadnlingTime").textContent.trim();
 
     
+    ws[XLSX.utils.encode_cell({ r: lastRow, c: 0 })] = { t: "s", v: "כמות הזמנות:" }; // First column
+    ws[XLSX.utils.encode_cell({ r: lastRow, c: 1 })] = { t: "n", v: orderCount };    // Second column
 
-    ws[XLSX.utils.encode_cell({ r: lastRow, c: 0 })] = { t: "s", v: "סהכ:" }; // First column
-    ws[XLSX.utils.encode_cell({ r: lastRow, c: 1 })] = { t: "n", v: overallIncome };    // Second column
+    ws[XLSX.utils.encode_cell({ r: lastRow +1, c: 0 })] = { t: "s", v: "סהכ הכנסות:" }; // First column
+    ws[XLSX.utils.encode_cell({ r: lastRow +1, c: 1 })] = { t: "n", v: overallIncome };    // Second column
 
     // Add the second row ("sum2:", 24)
-    ws[XLSX.utils.encode_cell({ r: lastRow + 1, c: 0 })] = { t: "s", v: "סהכ משלוחים:" }; // First column
-    ws[XLSX.utils.encode_cell({ r: lastRow + 1, c: 1 })] = { t: "n", v: totalShippingIncome };     // Second column
+    ws[XLSX.utils.encode_cell({ r: lastRow + 2, c: 0 })] = { t: "s", v: "סהכ הכנסות ממשלוחים:" }; // First column
+    ws[XLSX.utils.encode_cell({ r: lastRow + 2, c: 1 })] = { t: "n", v: totalShippingIncome };     // Second column
 
-    ws[XLSX.utils.encode_cell({ r: lastRow + 2, c: 0 })] = { t: "s", v: "זמן טיפול ממוצע במנה:" }; // First column
-    ws[XLSX.utils.encode_cell({ r: lastRow + 2, c: 1 })] = { t: "s", v: averageOrderHadnlingTime };     // Second column
+    ws[XLSX.utils.encode_cell({ r: lastRow + 3, c: 0 })] = { t: "s", v: "זמן טיפול ממוצע במנה:" }; // First column
+    ws[XLSX.utils.encode_cell({ r: lastRow + 3, c: 1 })] = { t: "s", v: averageOrderHadnlingTime };     // Second column
 
     // Update the range to include new rows
-    range.e.r += 3;
+    range.e.r += 4;
     ws['!ref'] = XLSX.utils.encode_range(range);
 
     // Append worksheet to workbook
@@ -465,6 +487,130 @@ function calculateDeltaTime(time1, time2) {
         formattedDeltaTime: `${minutes}:${String(seconds).padStart(2, '0')}`,
     };
 }
+
+    function updateCount(count, deleted){
+        if(deleted){
+            return ++count;
+        }
+        if(count > 0){
+            --count;
+        }
+        return count;
+    }
+
+    async function updateInventory(orders, deleted) {
+        const inventoryRef = ref(db, "config/inventory");
+
+        var pita = 0;
+        var lafa = 0;
+        var potato = 0;
+        var fries = 0;
+        var coke = 0;
+        var zero = 0;
+        var grape = 0;
+        var fuzeTea = 0;
+        var sprite = 0;
+        var schweppes = 0;
+
+
+        try {
+            const snapshot = await get(inventoryRef);
+            if (snapshot.exists()) {
+                const inventory = snapshot.val();
+                pita = inventory.pita;
+                lafa = inventory.lafa;
+                potato = inventory.potato;
+                fries = inventory.fries;
+                coke = inventory.coke;
+                zero = inventory.zero;
+                grape = inventory.grape;
+                fuzeTea = inventory.fuzeTea;
+                sprite = inventory.sprite;
+                schweppes = inventory.schweppes;
+            } else {
+                console.log("No inventory data available");
+            }
+        } catch (error) {
+            console.error("Error loading shop status:", error);
+        }
+
+        if(pita ===0 || lafa === 0 || potato === 0 || fries === 0 || coke === 0 || grape === 0 || fuzeTea === 0 || sprite === 0 || schweppes === 0){
+            document.getElementById('inventoryTag').textContent = "קיימים חוסרים"; 
+            document.getElementById('inventoryTag').style.color = "red";
+        }
+        else{
+            document.getElementById('inventoryTag').textContent = "תקין"; 
+            document.getElementById('inventoryTag').style.color = "green";
+        }
+
+        if(orders.length > 0){
+            orders.forEach(order => {
+
+            switch (order.drinks[0]){
+                case "קולה":
+                    coke = updateCount(coke, deleted);
+                    break;
+                case "זירו":
+                    zero = updateCount(zero, deleted);
+                    break;
+                case "פיוזטי":
+                    fuzeTea = updateCount(fuzeTea, deleted);
+                    break;
+                case "ענבים":
+                    grape = updateCount(grape, deleted);
+                    break;
+                case "ספרייט":
+                    sprite = updateCount(sprite, deleted);
+                    break;
+                case "שוופס פירות":
+                    schweppes = updateCount(schweppes, deleted);
+                    break;
+                default:
+                    break;
+                
+            }
+
+            switch (order.wrapping[0]){
+                case "בפיתה":
+                    pita = updateCount(pita, deleted);
+                    break;
+                case "בלאפה":
+                    lafa = updateCount(lafa, deleted);
+                    break;
+                default:
+                    break;
+                
+            }
+
+            switch (order.additions[0]){
+                case "ציפס":
+                    fries = updateCount(fries, deleted);
+                    break;
+                case "פוטטוס":
+                    potato = updateCount(potato, deleted);
+                    break;
+                default:
+                    break;
+                
+            }
+        
+        });
+            const newInventory = {
+                lafa: lafa,
+                pita: pita,
+                coke: coke,
+                fries: fries,
+                potato: potato,
+                zero: zero,
+                grape: grape,
+                fuzeTea: fuzeTea,
+                sprite: sprite,
+                schweppes: schweppes
+            }; 
+            set(ref(db, "config/inventory"), newInventory);
+        }
+    }
+
 
 document.getElementById('customer-orders-page').style.display = 'block';
 document.getElementById('close-day-page').style.display = 'none';
